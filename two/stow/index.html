@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitAI - แอปออกกำลังกายอัจฉริยะ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* เพิ่ม CSS สำหรับปุ่มสถิติ */
+    #statisticsButton {
+      background: linear-gradient(135deg, #66BB6A, #4CAF50);
+      position: relative;
+    }
+
+    #statisticsButton:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 187, 106, 0.3);
+    }
+
+    #statisticsButton i {
+      transition: transform 0.3s ease;
+    }
+
+    #statisticsButton:hover i {
+      transform: scale(1.2);
+    }
+
+    /* Notification badge */
+    .stat-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #FF6B6B;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      min-width: 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+<!-- Header -->
+<div class="header">
+  <div class="header-content">
+    <div class="logo">
+      <i class="fas fa-dumbbell"></i>
+      FitAI
+    </div>
+    <div class="header-stats">
+      <div class="stat-item">
+        <div class="stat-value" id="total-rounds">0</div>
+        <div class="stat-label">รอบ</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="total-reps">0</div>
+        <div class="stat-label">ครั้ง</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Control Panel -->
+<button id="toggleInstruction" class="action-button">
+  <i class="fas fa-book"></i> ซ่อนคำแนะนำ
+</button>
+
+<div class="control-panel">
+  <button id="webcamButton" class="action-button">
+    <i class="fas fa-camera"></i>
+    เปิดกล้อง
+  </button>
+  <button id="resetButton" class="action-button">
+    <i class="fas fa-redo"></i>
+    รีเซ็ตระบบ
+  </button>
+  <button id="testCountButton" class="action-button">
+    <i class="fas fa-flask"></i>
+    ทดสอบนับ
+  </button>
+  <button id="fullscreenButton" class="action-button">
+    <i class="fas fa-expand"></i>
+    เต็มจอ
+  </button>
+
+  <!-- ปุ่มดูสถิติใหม่ -->
+  <button id="statisticsButton" class="action-button" onclick="window.location.href='statistics.html'">
+    <i class="fas fa-chart-bar"></i>
+    ดูสถิติ
+  </button>
+</div>
+
+
+<!-- Status Display -->
+<div id="status" class="status">กรุณาเปิดกล้องวิดีโอ</div>
+
+<!-- Main Exercise Content -->
+<div id="demos" class="exercise-content">
+  <div class="webcam-section">
+    <!-- Webcam Container -->
+    <div id="webcamContainer" class="webcam-container">
+      <!-- Detection Indicator -->
+      <div id="detection-indicator" class="detection-indicator full-body-hidden">
+        <span>ไม่เห็นทั้งตัว</span>
+      </div>
+      <video id="webcam" autoplay muted></video>
+      <canvas id="output_canvas" class="canvas-output"></canvas>
+    </div>
+    <div id="position-display"></div>
+  </div>
+
+  <div class="counter-section">
+    <!-- Fitness Stats -->
+    <!-- <div class="fitness-stats">
+      <div class="stats-header"> -->
+        สถิติการออกกำลังกาย
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="session-time">0:00</div>
+          <div class="stat-text">เวลาออกกำลังกาย</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="calories-burned">0</div>
+          <div class="stat-text">แคลอรี่เผาผลาญ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Debug Panel
+<div id="debug-panel" class="debug-panel hidden">
+  <h3>ข้อมูลดีบัก</h3>
+  <div id="debug-content"></div>
+  <button id="toggleDebug" class="action-button">
+    <i class="fas fa-bug"></i> ซ่อน Debug
+  </button>
+</div> -->
+
+<!-- Achievement Animation -->
+<div id="achievement-animation">
+  <div id="achievement-text">🎉 เยี่ยมมาก! 🎉</div>
+  <div id="achievement-subtext">คุณทำครบเป้าหมายแล้ว</div>
+  <button id="continue-button">ดำเนินการต่อ</button>
+</div>
+
+<!-- JavaScript Files -->
+<script src="utils.js" type="module"></script>
+<script src="event-system.js" type="module"></script>
+<script src="counter-display.js" type="module"></script>
+<script src="countdown-system.js" type="module"></script>
+<script src="hold-timer.js" type="module"></script>
+<script src="video-overlay-display.js" type="module"></script>
+<script src="exercise2.js" type="module"></script>
+<script src="exercise-tracker.js" type="module"></script>
+<script src="main.js" type="module"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="enhanced-position-tracker.js" type="module"></script>
+<script src="angle-display.js" type="module"></script>
+
+<script>
+  // อัปเดต badge แสดงจำนวนวันที่ออกกำลังกาย
+  function updateStatisticsBadge() {
+    const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '{}');
+    const totalDays = Object.keys(exerciseHistory).length;
+
+    const statsButton = document.getElementById('statisticsButton');
+    if (statsButton && totalDays > 0) {
+      // ตรวจสอบว่ามี badge อยู่แล้วหรือไม่
+      let badge = statsButton.querySelector('.stat-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'stat-badge';
+        statsButton.style.position = 'relative';
+        statsButton.appendChild(badge);
+      }
+      badge.textContent = totalDays;
+
+      // เพิ่มเอฟเฟกต์ pulse ถ้ามีข้อมูลใหม่
+      badge.style.animation = 'pulse 1s ease-in-out';
+      setTimeout(() => {
+        badge.style.animation = '';
+      }, 1000);
+    }
+  }
+
+  // Fullscreen toggle
+  document.addEventListener("DOMContentLoaded", () => {
+    // อัปเดต badge เมื่อโหลดหน้า
+    updateStatisticsBadge();
+
+    // อัปเดตสถิติในหน้าหลัก
+    updateMainPageStats();
+
+    // ตั้งค่าปุ่ม fullscreen
+    const container = document.getElementById("webcamContainer");
+    const btn = document.getElementById("fullscreenButton");
+
+    btn.addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().then(() => {
+          btn.innerHTML = '<i class="fas fa-compress"></i> ออกจากเต็มจอ';
+        });
+      } else {
+        document.exitFullscreen().then(() => {
+          btn.innerHTML = '<i class="fas fa-expand"></i> เต็มจอ';
+        });
+      }
+    });
+  });
+
+  // อัปเดต badge เมื่อมีการบันทึกข้อมูลใหม่
+  document.addEventListener('roundCompleted', () => {
+    setTimeout(() => {
+      updateStatisticsBadge();
+      updateMainPageStats();
+    }, 100);
+  });
+
+  // ฟังก์ชันอัปเดตสถิติบนหน้าหลัก
+  function updateMainPageStats() {
+    const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '{}');
+    let totalRounds = 0;
+    let totalReps = 0;
+
+    Object.values(exerciseHistory).forEach(day => {
+      Object.values(day).forEach(exercise => {
+        totalRounds += exercise.rounds || 0;
+        totalReps += (exercise.leftReps || 0) + (exercise.rightReps || 0);
+      });
+    });
+
+    // อัปเดตค่าใน header
+    const roundsElement = document.getElementById('total-rounds');
+    const repsElement = document.getElementById('total-reps');
+
+    if (roundsElement) roundsElement.textContent = totalRounds;
+    if (repsElement) repsElement.textContent = totalReps;
+  }
+
+  // เพิ่ม animation สำหรับ badge
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+
+<!-- ระบบบันทึกอัตโนมัติ -->
+<script>
+    // สร้าง counter
+    let leftCounter = 0;
+    let rightCounter = 0;
+    let roundCounter = 0;
+    const targetReps = 10; // เป้าหมาย
+
+    // ฟังก์ชันส่งข้อมูลไปยัง Flutter
+    function sendCounterUpdate() {
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('updateCounter', {
+          leftCounter: leftCounter,
+          rightCounter: rightCounter,
+          roundCounter: roundCounter,
+          targetReps: targetReps
+        });
+      }
+    }
+
+    // ฟังก์ชันส่งข้อมูลการทำครบรอบ (จะบันทึกอัตโนมัติ)
+    function sendRoundCompleted() {
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('roundCompleted', {
+          rounds: 1,
+          leftReps: leftCounter,
+          rightReps: rightCounter
+        });
+      }
+    }
+
+    // เพิ่มการนับข้างซ้าย
+    function incrementLeft() {
+      leftCounter++;
+      sendCounterUpdate();
+      checkRoundComplete();
+    }
+
+    // เพิ่มการนับข้างขวา
+    function incrementRight() {
+      rightCounter++;
+      sendCounterUpdate();
+      checkRoundComplete();
+    }
+
+    // ตรวจสอบครบรอบ
+    function checkRoundComplete() {
+      if (leftCounter >= targetReps && rightCounter >= targetReps) {
+        // ทำครบรอบ - บันทึกอัตโนมัติ!
+        sendRoundCompleted();
+
+        // รีเซ็ตและเริ่มรอบใหม่
+        leftCounter = 0;
+        rightCounter = 0;
+        roundCounter++;
+        sendCounterUpdate();
+
+        console.log('🎉 ครบรอบที่ ' + roundCounter + '! บันทึกอัตโนมัติแล้ว');
+      }
+    }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.exercise-overlay > div').forEach(box => {
+      const text = box.innerText || '';
+
+      // ลบเฉพาะ 2 กล่องนี้
+      if (
+        text.includes('ออกกำลังกายปัจจุบัน') ||
+        text.includes('เซสชันนี้')
+      ) {
+        box.remove();
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

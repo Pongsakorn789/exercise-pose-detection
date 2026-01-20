@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitAI - แอปออกกำลังกายอัจฉริยะ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- Header -->
+<div class="header">
+  <div class="header-content">
+    <div class="logo">
+      <i class="fas fa-dumbbell"></i>
+      FitAI
+    </div>
+    <div class="header-stats">
+      <div class="stat-item">
+        <div class="stat-value" id="total-rounds">0</div>
+        <div class="stat-label">รอบ</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="total-reps">0</div>
+        <div class="stat-label">ครั้ง</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Control Panel -->
+  <div class="control-panel">
+    <button id="webcamButton" class="action-button">
+      <i class="fas fa-camera"></i>
+      เปิดกล้อง
+    </button>
+    <button id="fullscreenButton" class="action-button">
+      <i class="fas fa-expand"></i>
+      เต็มหน้าจอ
+    </button>
+    <button id="resetButton" class="action-button">
+      <i class="fas fa-redo"></i>
+      รีเซ็ตระบบ
+    </button>
+    <button id="testCountButton" class="action-button">
+      <i class="fas fa-flask"></i>
+      ทดสอบนับ
+    </button>
+  </div>
+
+  
+
+  <!-- Status Display -->
+  <div id="status" class="status">กรุณาเปิดกล้องวิดีโอ</div>
+
+  <!-- Main Exercise Content -->
+  <div id="demos" class="exercise-content">
+    <div class="webcam-section">
+      <!-- Webcam Container -->
+      <div class="webcam-container">
+        <!-- Detection Indicator -->
+        <div id="detection-indicator" class="detection-indicator full-body-hidden">
+          <span>ไม่เห็นทั้งตัว</span>
+        </div>
+        <video id="webcam" autoplay muted></video>
+        <canvas id="output_canvas" class="canvas-output"></canvas>
+
+        <!-- Exercise Counter Overlay - อยู่ภายในวิดีโอ มุมบนขวา -->
+        <div class="exercise-overlay">
+          <div class="top-stats-overlay">
+            <div class="counter-overlay">
+              <div class="counter-title">บันทึกการออกกำลังกาย</div>
+              <div class="counter-grid">
+                <!-- สลับตำแหน่ง: ข้างขวาแสดงก่อน (เพราะวิดีโอพลิก) -->
+                <div class="counter-item">
+                  <div class="counter-number right-counter" id="overlay-right-counter">0</div>
+                  <div class="counter-label">ข้างขวา</div>
+                </div>
+                <div class="counter-item">
+                  <div class="counter-number left-counter" id="overlay-left-counter">0</div>
+                  <div class="counter-label">ข้างซ้าย</div>
+                </div>
+              </div>
+              <div class="round-info">
+                รอบที่ <span class="round-number" id="overlay-round-counter">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Position Display (if needed) -->
+      <div id="position-display"></div>
+    </div>
+
+    <div class="counter-section">
+      <!-- Counter Display Area -->
+      <!-- counter-container will be inserted here by JavaScript -->
+
+      <!-- Fitness Stats -->
+      <div class="fitness-stats">
+        <div class="stats-header">
+          สถิติการออกกำลังกาย
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="session-time">0:00</div>
+            <div class="stat-text">เวลาออกกำลังกาย</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="calories-burned">0</div>
+            <div class="stat-text">แคลอรี่เผาผลาญ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Panel (if needed) -->
+  <div id="debug-panel" class="debug-panel hidden">
+    <h3>ข้อมูลดีบัก</h3>
+    <div id="debug-content"></div>
+  </div>
+</div>
+
+<!-- Achievement Animation -->
+<div id="achievement-animation">
+  <div id="achievement-text">🎉 เยี่ยมมาก! 🎉</div>
+  <div id="achievement-subtext">คุณทำครบเป้าหมายแล้ว</div>
+  <button id="continue-button">ดำเนินการต่อ</button>
+</div>
+
+<!-- JavaScript Files -->
+<script src="utils.js" type="module"></script>
+<script src="event-system.js" type="module"></script>
+<script src="counter-display.js" type="module"></script>
+<script src="countdown-system.js" type="module"></script>
+<script src="hold-timer.js" type="module"></script>
+<!-- 🔄 เปลี่ยนจาก overhead-press-exercise.js เป็น standing-dumbbell-exercise.js -->
+<script src="standing-dumbbell-exercise.js" type="module"></script>
+<script src="exercise-tracker.js" type="module"></script>
+<script src="main.js" type="module"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- JavaScript Files -->
+<script src="enhanced-position-tracker.js" type="module"></script>
+<script src="main.js" type="module"></script>
+<script src="angle-display.js" type="module"></script>
+
+<script>
+// Global variables for session tracking
+let sessionStartTime = null;
+let sessionTimer = null;
+let totalCalories = 0;
+
+// Initialize session timer
+function startSessionTimer() {
+  if (!sessionStartTime) {
+    sessionStartTime = Date.now();
+    sessionTimer = setInterval(updateSessionStats, 1000);
+  }
+}
+
+function updateSessionStats() {
+  if (!sessionStartTime) return;
+
+  const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+
+  document.getElementById('session-time').textContent =
+    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+  // Estimate calories burned (very rough estimate: 3-5 calories per minute for light exercise)
+  const estimatedCalories = Math.floor(elapsed / 60 * 4);
+  document.getElementById('calories-burned').textContent = estimatedCalories;
+
+  // Update header stats
+  document.getElementById('total-rounds').textContent = window.roundCounter || 0;
+  // 🔄 เปลี่ยนจากขาเป็นแขน
+  document.getElementById('total-reps').textContent =
+    (window.leftCounter || 0) + (window.rightCounter || 0);
+}
+
+// Enhanced button interactions
+document.addEventListener('DOMContentLoaded', function() {
+  const webcamButton = document.getElementById('webcamButton');
+  const resetButton = document.getElementById('resetButton');
+  const testCountButton = document.getElementById('testCountButton');
+
+  // Add click effects
+  function addClickEffect(button) {
+    button.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      const rect = button.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      ripple.classList.add('ripple');
+
+      button.appendChild(ripple);
+
+      setTimeout(() => {
+        ripple.remove();
+      }, 600);
+    });
+  }
+
+  // Apply click effects to buttons
+  [webcamButton, resetButton, testCountButton].forEach(addClickEffect);
+
+  // Fullscreen button
+  const fullscreenButton = document.getElementById('fullscreenButton');
+  if (fullscreenButton) {
+    addClickEffect(fullscreenButton);
+
+    fullscreenButton.addEventListener('click', function() {
+      const webcamContainer = document.querySelector('.webcam-container');
+
+      if (!document.fullscreenElement) {
+        // เข้าสู่โหมดเต็มหน้าจอ
+        if (webcamContainer.requestFullscreen) {
+          webcamContainer.requestFullscreen();
+        } else if (webcamContainer.webkitRequestFullscreen) { /* Safari */
+          webcamContainer.webkitRequestFullscreen();
+        } else if (webcamContainer.msRequestFullscreen) { /* IE11 */
+          webcamContainer.msRequestFullscreen();
+        }
+
+        // เปลี่ยนไอคอนและข้อความ
+        this.innerHTML = '<i class="fas fa-compress"></i> ออกจากเต็มหน้าจอ';
+      } else {
+        // ออกจากโหมดเต็มหน้าจอ
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+          document.msExitFullscreen();
+        }
+
+        // เปลี่ยนไอคอนและข้อความ
+        this.innerHTML = '<i class="fas fa-expand"></i> เต็มหน้าจอ';
+      }
+    });
+
+    // อัปเดตข้อความปุ่มเมื่อออกจาก fullscreen ด้วยวิธีอื่น (เช่นกด ESC)
+    document.addEventListener('fullscreenchange', function() {
+      if (!document.fullscreenElement) {
+        fullscreenButton.innerHTML = '<i class="fas fa-expand"></i> เต็มหน้าจอ';
+      }
+    });
+
+    document.addEventListener('webkitfullscreenchange', function() {
+      if (!document.webkitFullscreenElement) {
+        fullscreenButton.innerHTML = '<i class="fas fa-expand"></i> เต็มหน้าจอ';
+      }
+    });
+  }
+
+  // Enhanced webcam button
+  webcamButton.addEventListener('click', function() {
+    const icon = this.querySelector('i');
+
+    if (this.textContent.includes('เปิดกล้อง')) {
+      icon.className = 'fas fa-video';
+      this.innerHTML = '<i class="fas fa-video"></i> ปิดกล้อง';
+      startSessionTimer();
+    } else {
+      icon.className = 'fas fa-camera';
+      this.innerHTML = '<i class="fas fa-camera"></i> เปิดกล้อง';
+    }
+  });
+
+  // Enhanced reset button with confirmation
+  resetButton.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const confirmReset = confirm('คุณต้องการรีเซ็ตระบบใช่หรือไม่? ข้อมูลทั้งหมดจะถูกลบ');
+    if (confirmReset) {
+      // Reset session timer
+      if (sessionTimer) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+      }
+      sessionStartTime = null;
+      totalCalories = 0;
+
+      // Reset display
+      document.getElementById('session-time').textContent = '0:00';
+      document.getElementById('calories-burned').textContent = '0';
+      document.getElementById('total-rounds').textContent = '0';
+      document.getElementById('total-reps').textContent = '0';
+
+      // Show reset animation
+      showResetAnimation();
+    }
+  });
+
+  // Test count button with visual feedback
+  testCountButton.addEventListener('click', function() {
+    // Create test count effect
+    showTestCountEffect();
+  });
+});
+
+function showResetAnimation() {
+  const resetNotification = document.createElement('div');
+  resetNotification.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(239, 83, 80, 0.95);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    z-index: 3000;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    animation: fadeInOut 2s ease-in-out;
+  `;
+  resetNotification.innerHTML = `
+    <div style="text-align: center;">
+      <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+      ระบบถูกรีเซ็ตเรียบร้อยแล้ว
+    </div>
+  `;
+
+  document.body.appendChild(resetNotification);
+
+  setTimeout(() => {
+    resetNotification.remove();
+  }, 2000);
+}
+
+function showTestCountEffect() {
+  const testEffect = document.createElement('div');
+  testEffect.style.cssText = `
+    position: fixed;
+    top: 20%;
+    right: 20px;
+    background: rgba(255, 167, 38, 0.95);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    z-index: 2000;
+    animation: slideInRight 0.5s ease-out, fadeOut 0.5s ease-in 2s forwards;
+  `;
+  testEffect.innerHTML = `
+    <i class="fas fa-flask"></i> ทดสอบการนับ +1
+  `;
+
+  document.body.appendChild(testEffect);
+
+  setTimeout(() => {
+    testEffect.remove();
+  }, 2500);
+}
+
+// Enhanced status updates with icons
+function updateStatusWithIcon(message, color = '#4CAF50', icon = '✓') {
+  const statusElement = document.getElementById('status');
+  if (statusElement) {
+    statusElement.innerHTML = `<i class="fas fa-${getIconClass(icon)}"></i> ${message}`;
+    statusElement.style.color = color;
+  }
+}
+
+function getIconClass(icon) {
+  const iconMap = {
+    '✓': 'check',
+    '⚠': 'exclamation-triangle',
+    '✗': 'times',
+    '🎯': 'bullseye',
+    '⏱': 'clock',
+    '📷': 'camera'
+  };
+  return iconMap[icon] || 'info';
+}
+
+// Video compatibility for different browsers
+document.addEventListener('DOMContentLoaded', function() {
+  const video = document.getElementById('webcam');
+
+  // Check browser compatibility and add appropriate attributes
+  if (navigator.userAgent.indexOf('Firefox') !== -1) {
+    // Firefox specific settings
+    video.setAttribute('muted', '');
+    video.style.objectFit = 'cover';
+  } else {
+    // For other browsers including Safari
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+  }
+});
+
+console.log('🎯 FitAI - แอปออกกำลังกายอัจฉริยะ เริ่มต้นแล้ว!');
+</script>
+
+
+</body>
+</html>
