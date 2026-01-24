@@ -10,9 +10,12 @@
   --dark-color: #2C3E50;
   --light-color: #ECF0F1;
   --white-color: #FFFFFF;
-  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-primary: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-  --gradient-secondary: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
+  /* Minimalist soft background */
+  --gradient-bg: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  --gradient-primary: linear-gradient(135deg, #0F766E 0%, #14B8A6 100%);
+  /* Green theme */
+  --gradient-secondary: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+  /* Gold/Orange */
   --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
   --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
   --shadow-heavy: 0 15px 35px rgba(0, 0, 0, 0.2);
@@ -107,22 +110,35 @@ html {
 }
 
 /* Control Panel */
+/* Control Panel - ย้ายมาด้านล่างและเต็มความกว้าง */
 .control-panel {
   position: fixed;
-  top: 70px;
+  bottom: 20px;
+  /* ย้ายมาด้านล่าง */
+  left: 20px;
   right: 20px;
-  flex-direction: column;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  border-radius: 12px;
-  padding: 0.75rem;
-  box-shadow: var(--shadow-medium);
+  top: auto;
+  /* ยกเลิก top */
+  flex-direction: row;
+  /* เรียงแนวนอน */
+  justify-content: space-between;
+  /* กระจายปุ่ม */
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 1rem;
   z-index: 2000;
   width: auto;
   margin: 0;
   display: flex;
+}
+
+#summaryButton {
+  background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
+  flex: 1;
+  /* ขยายเต็มพื้นที่ */
 }
 
 /* Floating Buttons - ปุ่มซ้ายและขวา */
@@ -171,30 +187,39 @@ html {
 }
 
 .action-button {
-  padding: 0.6rem 1rem;
+  padding: 0.8rem 1rem;
   border: none;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  font-size: 0.9rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
   transition: var(--transition);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-width: 140px;
+  min-width: 100px;
+  /* ลด min-width */
   justify-content: center;
   box-shadow: var(--shadow-light);
   position: relative;
   overflow: hidden;
   color: white;
+  flex: 1;
+  /* ให้ปุ่มขยายเท่าๆ กัน */
 }
 
 #resetButton {
   background: linear-gradient(135deg, var(--danger-color), #FF7043);
+  flex: 0 0 auto;
+  /* ปุ่มรีเซ็ตขนาดพอดีเนื้อหา */
+  min-width: auto;
+  padding: 0.8rem 1.2rem;
 }
 
 #testCountButton {
   background: linear-gradient(135deg, var(--warning-color), #FFB74D);
+  display: none;
+  /* ซ่อนปุ่มเทส */
 }
 
 #toggleInstruction {
@@ -232,8 +257,8 @@ html {
   overflow: hidden;
   box-shadow: var(--shadow-heavy);
   margin: 0 auto;
-  background: linear-gradient(45deg, #000, #333);
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  background: #000;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Controls placed inside the webcam container (centered below the video) */

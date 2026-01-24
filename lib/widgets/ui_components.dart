@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 /// ===== สีหลัก =====
 const Color primaryGreen = Color(0xFF0F766E);
 const Color goldButtonColor = Color(0xFFB88A1E);
+const Color softBackgroundColor = Color(
+  0xFFF8F9FA,
+); // New minimalist background
+const Color textPrimaryColor = Color(0xFF2D3748); // Dark grey for text
+const Color textSecondaryColor = Color(0xFF718096); // Softer grey
 
 /// ===== Decoration สำหรับ TextField (label ลอย) =====
 InputDecoration inputDecoration(String label) {
@@ -12,11 +17,8 @@ InputDecoration inputDecoration(String label) {
     labelStyle: const TextStyle(fontSize: 18),
     filled: true,
     fillColor: Colors.white,
-    contentPadding:
-        const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
   );
 }
 
@@ -39,27 +41,19 @@ Widget floatingInput({
 }
 
 /// ===== ปุ่มสีทอง =====
-Widget goldButton({
-  required String text,
-  required VoidCallback onPressed,
-}) {
+Widget goldButton({required String text, required VoidCallback onPressed}) {
   return SizedBox(
     height: 60,
     width: double.infinity,
     child: ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: goldButtonColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
       onPressed: onPressed,
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
       ),
     ),
   );
@@ -86,8 +80,7 @@ Future<void> pickBirthDate({
       age--;
     }
 
-    birthCtrl.text =
-        "${picked.day}/${picked.month}/${picked.year}";
+    birthCtrl.text = "${picked.day}/${picked.month}/${picked.year}";
     ageCtrl.text = age.toString();
   }
 }

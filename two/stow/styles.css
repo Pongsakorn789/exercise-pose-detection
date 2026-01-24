@@ -1,6 +1,6 @@
 :root {
-  --primary-color: #FF6B6B;
-  --primary-dark: #E55555;
+  --primary-color: #56AB91;
+  --primary-dark: #3E8E75;
   --secondary-color: #4ECDC4;
   --secondary-dark: #45B7B8;
   --accent-color: #45B7D1;
@@ -10,8 +10,8 @@
   --dark-color: #2C3E50;
   --light-color: #ECF0F1;
   --white-color: #FFFFFF;
-  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-primary: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+  --gradient-bg: linear-gradient(135deg, #F9FAFB 0%, #E5E7EB 100%);
+  --gradient-primary: linear-gradient(135deg, #56AB91 0%, #3E8E75 100%);
   --gradient-secondary: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
   --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
   --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.15);
@@ -178,7 +178,10 @@ html {
 }
 
 @keyframes ripple-animation {
-  to { transform: scale(4); opacity: 0; }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
 
 /* Webcam container */
@@ -195,7 +198,9 @@ html {
   border: 3px solid rgba(255, 255, 255, 0.2);
 }
 
-#webcam, #output_canvas, .canvas-output {
+#webcam,
+#output_canvas,
+.canvas-output {
   position: absolute;
   top: 0;
   left: 0;
@@ -269,8 +274,13 @@ html {
   margin-bottom: 2px;
 }
 
-.left-counter { color: #FF6B6B; }
-.right-counter { color: #4ECDC4; }
+.left-counter {
+  color: #FF6B6B;
+}
+
+.right-counter {
+  color: #4ECDC4;
+}
 
 .counter-label {
   font-size: 10px;
@@ -602,9 +612,17 @@ html {
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .glow {
@@ -681,7 +699,8 @@ html {
     align-items: center;
   }
 
-  .counter-overlay, .session-overlay {
+  .counter-overlay,
+  .session-overlay {
     width: 100%;
     max-width: 250px;
   }
@@ -732,33 +751,34 @@ html {
   .status-subtext {
     font-size: 10px;
   }
-/* ✅ Fitness stats เวอร์ชันที่อยู่บน overlay กล้อง */
-.fitness-stats.overlay-version {
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 1rem;
-  max-width: 250px;
-  font-size: 0.85rem;
-}
 
-.fitness-stats.overlay-version .stats-header {
-  color: #4ECDC4;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-  text-align: center;
-}
+  /* ✅ Fitness stats เวอร์ชันที่อยู่บน overlay กล้อง */
+  .fitness-stats.overlay-version {
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    max-width: 250px;
+    font-size: 0.85rem;
+  }
 
-.fitness-stats.overlay-version .stat-number {
-  color: #FFD700;
-  font-size: 1.4rem;
-}
+  .fitness-stats.overlay-version .stats-header {
+    color: #4ECDC4;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
 
-.fitness-stats.overlay-version .stat-text {
-  color: #EEE;
-  font-size: 0.8rem;
-}
+  .fitness-stats.overlay-version .stat-number {
+    color: #FFD700;
+    font-size: 1.4rem;
+  }
+
+  .fitness-stats.overlay-version .stat-text {
+    color: #EEE;
+    font-size: 0.8rem;
+  }
 
 
 }
@@ -846,8 +866,8 @@ html {
 }
 
 /* ❌ ซ่อนทุกอย่างใน top-stats-overlay อย่างเฉพาะเจาะจง */
-.exercise-overlay > .top-stats-overlay,
-.exercise-overlay > .top-stats-overlay > *,
+.exercise-overlay>.top-stats-overlay,
+.exercise-overlay>.top-stats-overlay>*,
 .exercise-overlay .counter-overlay,
 .exercise-overlay .session-overlay {
   display: none !important;

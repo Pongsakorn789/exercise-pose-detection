@@ -27,7 +27,6 @@ class _PhysioRegisterPageState extends State<PhysioRegisterPage> {
   }
 
   Future<void> _register() async {
-    // ตรวจสอบข้อมูล
     if (emailController.text.trim().isEmpty) {
       _showError("กรุณากรอกอีเมล");
       return;
@@ -56,7 +55,6 @@ class _PhysioRegisterPageState extends State<PhysioRegisterPage> {
     setState(() => isLoading = true);
 
     try {
-      // สมัครสมาชิก
       final user = await auth.register(
         email: emailController.text.trim(),
         password: passwordController.text,
@@ -68,7 +66,6 @@ class _PhysioRegisterPageState extends State<PhysioRegisterPage> {
         return;
       }
 
-      // บันทึกข้อมูลเพิ่มเติมลง Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'email': emailController.text.trim(),
         'role': 'physio',
@@ -118,105 +115,168 @@ class _PhysioRegisterPageState extends State<PhysioRegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: primaryGreen,
+      backgroundColor: softBackgroundColor,
       appBar: AppBar(
-        backgroundColor: primaryGreen,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: textPrimaryColor,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
         title: const Text(
-          'สมัครสมาชิกนักกายภาพ',
-          style: TextStyle(color: Colors.white),
+          'สมัครสมาชิก',
+          style: TextStyle(
+            color: textPrimaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 20),
-
-              // ไอคอน
-              const Icon(
-                Icons.medical_services_outlined,
-                size: 80,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
                 color: Colors.white,
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                'สมัครสมาชิกนักกายภาพ',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              floatingInput(
-                label: "อีเมล",
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-              ),
-
-              const SizedBox(height: 16),
-
-              floatingInput(
-                label: "รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)",
-                controller: passwordController,
-                obscure: true,
-              ),
-
-              const SizedBox(height: 16),
-
-              floatingInput(
-                label: "ยืนยันรหัสผ่าน",
-                controller: confirmPasswordController,
-                obscure: true,
-              ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                height: 60,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: goldButtonColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  onPressed: isLoading ? null : _register,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          'สมัครสมาชิก',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                ),
+                ],
               ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.medical_services_rounded,
+                        color: primaryGreen,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "ข้อมูลบัญชีนักกายภาพ",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textPrimaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24, color: Colors.grey),
 
-              const SizedBox(height: 20),
-            ],
-          ),
+                  _buildTextField(
+                    label: "อีเมล",
+                    controller: emailController,
+                    icon: Icons.email_rounded,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildTextField(
+                    label: "รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)",
+                    controller: passwordController,
+                    icon: Icons.lock_rounded,
+                    obscure: true,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildTextField(
+                    label: "ยืนยันรหัสผ่าน",
+                    controller: confirmPasswordController,
+                    icon: Icons.lock_reset_rounded,
+                    obscure: true,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            SizedBox(
+              height: 56,
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryGreen,
+                  elevation: 4,
+                  shadowColor: primaryGreen.withOpacity(0.4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: isLoading ? null : _register,
+                child: isLoading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'ลงทะเบียน',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscure = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 16, color: textPrimaryColor),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey[600]),
+        prefixIcon: Icon(icon, color: primaryGreen),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryGreen, width: 2),
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF9FAFB),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
         ),
       ),
     );
@@ -227,7 +287,10 @@ class _PhysioRegisterPageState extends State<PhysioRegisterPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 4),
       ),
     );

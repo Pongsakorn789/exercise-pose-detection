@@ -7,109 +7,264 @@
   <title>สรุปผลการออกกำลังกาย</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Page-specific overrides for readability */
+    /* Page-specific overrides */
+    :root {
+      --primary-color: #0F766E;
+      --primary-light: #14B8A6;
+      --secondary-color: #F59E0B;
+      --bg-color: #F9FAFB;
+      --text-primary: #1F2937;
+      --text-secondary: #6B7280;
+      --white: #FFFFFF;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    }
+
     body {
-      background: linear-gradient(180deg, #f6f9ff, #eef3ff);
-      font-family: 'Sarabun', Arial, sans-serif;
-      color: #16202a;
+      background: var(--bg-color);
+      font-family: 'Sarabun', sans-serif;
+      color: var(--text-primary);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* Center horizontally and vertically */
     }
 
     .container-inner {
-      max-width: 980px;
-      margin: 20px auto;
-      padding: 18px;
+      width: 100%;
+      max-width: 600px;
+      padding: 24px;
+      box-sizing: border-box;
     }
 
     .modal-card {
-      background: #ffffffcc;
-      border-radius: 14px;
-      padding: 22px;
-      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.12);
-      border: 1px solid rgba(2, 6, 23, 0.04);
+      background: var(--white);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      text-align: center;
     }
 
-    .modal-header .title {
+    /* Centered Header Styles */
+    .modal-header-centered {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-large {
       font-size: 24px;
       font-weight: 800;
-      color: #0b2540;
-    }
-
-    .modal-header .subtitle {
-      font-size: 14px;
-      color: #6b7a86;
-      margin-top: 4px;
-    }
-
-    .modal-header {
+      color: var(--text-primary);
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      line-height: 1.2;
+      width: 100%;
+      white-space: nowrap;
+      /* Prevent wrapping */
     }
 
-    .summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      margin-top: 14px;
+    @media (max-width: 400px) {
+      .title-large {
+        font-size: 20px;
+        white-space: normal;
+        /* Allow wrap on tiny screens */
+      }
     }
 
-    .summary-item {
-      background: transparent;
-      border: none;
-      padding: 12px 8px;
-      text-align: left;
+    .success-icon {
+      color: #14B8A6;
+      font-size: 24px;
     }
 
-    .summary-item .label {
-      font-size: 13px;
-      color: #5a6a75;
+    .subtitle {
+      font-size: 18px;
+      color: var(--text-secondary);
       font-weight: 600;
     }
 
-    .summary-item .value {
-      font-size: 28px;
-      font-weight: 900;
-      color: #0b2540;
-      margin-top: 6px;
+    .date-badge-centered {
+      background: #F3F4F6;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    #summary-duration {
+    .summary-divider {
+      height: 1px;
+      background: #E5E7EB;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .summary-stats-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .summary-stat-box {
+      background: #F9FAFB;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid #F3F4F6;
+    }
+
+    .summary-stat-box.highlight {
+      background: #F0FDFA;
+      border-color: #CCFBF1;
+    }
+
+    .stat-icon-wrapper {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       font-weight: 800;
-      color: #0b2540;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon-wrapper.left {
+      background: #E0E7FF;
+      color: #4F46E5;
+    }
+
+    .stat-icon-wrapper.right {
+      background: #ECFDF5;
+      color: #059669;
+    }
+
+    .stat-icon-wrapper.round {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+
+    .stat-icon-wrapper.total {
+      background: #CCFBF1;
+      color: #0F766E;
+      font-size: 16px;
+    }
+
+    .stat-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .stat-unit {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Light duration box */
+    .summary-duration-box.light {
+      background: #F3F4F6;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      border: 1px solid #E5E7EB;
+      box-shadow: none;
+    }
+
+    .summary-duration-box.light .duration-label {
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+      opacity: 1;
+    }
+
+    .summary-duration-box.light .duration-value {
+      color: var(--primary-color);
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: 1px;
     }
 
     .actions-row {
       display: flex;
       gap: 12px;
-      justify-content: flex-end;
-      margin-top: 18px;
     }
 
     .action-button {
-      background: linear-gradient(90deg, #4ECDC4, #667eea);
-      color: white;
+      flex: 1;
       border: none;
-      padding: 10px 16px;
-      border-radius: 999px;
-      box-shadow: 0 6px 18px rgba(102, 126, 234, 0.18);
+      padding: 16px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 16px;
       cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
     }
 
-    #backButton {
-      margin: 12px 0 6px 12px;
-      background: #fff;
-      color: #0b2540;
-      border: 1px solid rgba(11, 37, 64, 0.06);
+    .action-button.primary {
+      background: var(--primary-color);
+      color: white;
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
     }
 
-    @media (max-width:640px) {
-      .summary-grid {
+    .action-button.primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+    }
+
+    .action-button.danger {
+      background: white;
+      color: #DC2626;
+      border: 1px solid #FEE2E2;
+    }
+
+    .action-button.danger:hover {
+      background: #FEE2E2;
+    }
+
+    @media (max-width: 480px) {
+      .summary-stats-container {
         grid-template-columns: 1fr;
       }
 
-      .summary-item .value {
-        font-size: 24px
+      .actions-row {
+        flex-direction: row;
       }
     }
   </style>
@@ -117,44 +272,71 @@
 
 <body>
   <div class="container-inner">
-    <button id="backButton" class="action-button">← ย้อนกลับ</button>
-
     <div id="summaryRoot">
       <div class="modal-card">
-        <div class="modal-header">
-          <div>
-            <div class="title">สรุปผลการออกกำลังกาย</div>
-            <div class="subtitle">ท่ายกดัมเบล (ยืน)</div>
+        <div class="modal-header-centered">
+          <div class="title-large">
+            <i class="fas fa-check-circle success-icon"></i>
+            สรุปผลการออกกำลังกาย
           </div>
-          <div style="font-size:13px;color:#556879;">วันที่: <span id="summary-date">-</span></div>
-        </div>
-
-        <div class="summary-grid">
-          <div class="summary-item">
-            <div class="label">ข้างซ้าย</div>
-            <div id="summary-left" class="value">0</div>
-          </div>
-          <div class="summary-item">
-            <div class="label">ข้างขวา</div>
-            <div id="summary-right" class="value">0</div>
-          </div>
-          <div class="summary-item">
-            <div class="label">จำนวนรอบ</div>
-            <div id="summary-rounds" class="value">0</div>
-          </div>
-          <div class="summary-item">
-            <div class="label">รวมครั้ง</div>
-            <div id="summary-total" class="value">0</div>
+          <div class="subtitle">ท่ายกดัมเบล (ยืน)</div>
+          <div class="date-badge-centered">
+            <i class="far fa-calendar-alt"></i> <span id="summary-date">-</span>
           </div>
         </div>
 
-        <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:18px;">
-          <div style="font-size:15px; color:#34495e;">ระยะเวลา: <span id="summary-duration">0:00</span></div>
+        <div class="summary-divider"></div>
+
+        <div class="summary-stats-container">
+          <div class="summary-stat-box">
+            <div class="stat-icon-wrapper left">L</div>
+            <div class="stat-content">
+              <div class="stat-label">ข้างซ้าย</div>
+              <div id="summary-left" class="stat-value">0</div>
+              <div class="stat-unit">ครั้ง</div>
+            </div>
+          </div>
+
+          <div class="summary-stat-box">
+            <div class="stat-icon-wrapper right">R</div>
+            <div class="stat-content">
+              <div class="stat-label">ข้างขวา</div>
+              <div id="summary-right" class="stat-value">0</div>
+              <div class="stat-unit">ครั้ง</div>
+            </div>
+          </div>
+
+          <div class="summary-stat-box">
+            <div class="stat-icon-wrapper round"><i class="fas fa-sync-alt"></i></div>
+            <div class="stat-content">
+              <div class="stat-label">จำนวนรอบ</div>
+              <div id="summary-rounds" class="stat-value">0</div>
+              <div class="stat-unit">รอบ</div>
+            </div>
+          </div>
+
+          <div class="summary-stat-box highlight">
+            <div class="stat-icon-wrapper total"><i class="fas fa-dumbbell"></i></div>
+            <div class="stat-content">
+              <div class="stat-label">รวมทั้งหมด</div>
+              <div id="summary-total" class="stat-value">0</div>
+              <div class="stat-unit">ครั้ง</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-duration-box light">
+          <div class="duration-label">ระยะเวลาทั้งหมด</div>
+          <div id="summary-duration" class="duration-value">0:00</div>
         </div>
 
         <div class="actions-row">
-          <button id="downloadCsv" class="action-button">ดาวน์โหลด CSV</button>
-          <button id="clearSummary" class="action-button">ล้างสรุป</button>
+          <button id="clearSummary" class="action-button danger">
+            <i class="fas fa-times"></i> ปิด
+          </button>
+          <button id="downloadCsv" class="action-button primary">
+            <i class="fas fa-save"></i> บันทึกข้อมูล
+          </button>
         </div>
       </div>
     </div>
@@ -191,10 +373,6 @@
       document.getElementById('summary-date').textContent = summary.date || '-';
     }
 
-    document.getElementById('backButton').addEventListener('click', () => {
-      window.location.href = 'index.html';
-    });
-
     document.getElementById('downloadCsv').textContent = 'บันทึกข้อมูล';
     document.getElementById('downloadCsv').id = 'saveData';
 
@@ -204,7 +382,6 @@
       // ส่งข้อมูลไปยัง Flutter
       if (window.flutter_inappwebview) {
         window.flutter_inappwebview.callHandler('saveExerciseData', summary).then(function (result) {
-          // กรณีที่ Flutter ส่งค่ากลับมา (ถ้ามี)
           console.log("Save result: " + result);
         });
       } else {
@@ -216,8 +393,15 @@
 
     document.getElementById('clearSummary').addEventListener('click', () => {
       localStorage.removeItem('lastSummary');
-      alert('ล้างสรุปเรียบร้อยแล้ว');
-      window.location.href = 'index.html';
+      // Navigate close properly or redirect
+      if (window.flutter_inappwebview) {
+        // You might want to close webview or go back
+        console.log("Closing summary");
+        // Here we just redirect to index as standard fallback
+        window.location.href = 'index.html';
+      } else {
+        window.location.href = 'index.html';
+      }
     });
   </script>
 </body>

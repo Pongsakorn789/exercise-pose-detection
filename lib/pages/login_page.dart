@@ -1,3 +1,6 @@
+import 'package:flutter/services.dart';
+import '../utils/formatters.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../auth/auth_service.dart';
@@ -18,9 +21,9 @@ class _LoginPageState extends State<LoginPage> {
   final auth = AuthService();
   bool isLoading = false;
 
-  /// แปลงเลขบัตร → email ภายในระบบ
   String idCardToEmail(String idCard) {
-    return "$idCard@senior.app";
+    // Remove hyphens for internal logic
+    return "${idCard.replaceAll('-', '')}@senior.app";
   }
 
   @override
@@ -30,15 +33,15 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  /// ฟังก์ชันเข้าสู่ระบบ
   Future<void> _login() async {
-    // ตรวจสอบความยาวเลขบัตร
-    if (idCardCtrl.text.trim().isEmpty) {
+    final cleanId = idCardCtrl.text.replaceAll('-', '').trim();
+
+    if (cleanId.isEmpty) {
       _showError("กรุณากรอกเลขบัตรประชาชน");
       return;
     }
-    
-    if (idCardCtrl.text.trim().length != 13) {
+
+    if (cleanId.length != 13) {
       _showError("กรุณากรอกเลขบัตรประชาชน 13 หลัก");
       return;
     }
@@ -51,9 +54,8 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => isLoading = true);
 
     try {
-      // เข้าสู่ระบบ
       final user = await auth.login(
-        email: idCardToEmail(idCardCtrl.text.trim()),
+        email: idCardToEmail(cleanId),
         password: passCtrl.text,
       );
 
@@ -62,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // ตรวจสอบ role
       final role = await auth.getUserRole(user.uid);
 
       if (!mounted) {
@@ -70,7 +71,6 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // ตรวจสอบว่าเป็นผู้สูงอายุหรือไม่
       if (role != 'elderly') {
         await FirebaseAuth.instance.signOut();
         throw FirebaseAuthException(
@@ -79,21 +79,18 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
 
-      // เข้าสู่หน้าหลัก
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const HomePage(role: 'elderly'),
-          ),
+          MaterialPageRoute(builder: (_) => const HomePage(role: 'elderly')),
         );
       }
     } on FirebaseAuthException catch (e) {
       setState(() => isLoading = false);
       if (!mounted) return;
-      
+
       String message = 'เข้าสู่ระบบไม่สำเร็จ';
-      
+
       switch (e.code) {
         case 'user-not-found':
           message = 'ไม่พบบัญชีผู้ใช้นี้ กรุณาสมัครสมาชิกก่อน';
@@ -119,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
         default:
           message = 'เกิดข้อผิดพลาด: ${e.message}';
       }
-      
+
       _showError(message);
     } catch (e) {
       setState(() => isLoading = false);
@@ -131,103 +128,214 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: primaryGreen,
-      resizeToAvoidBottomInset: true,
+      backgroundColor: softBackgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: primaryGreen,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: textPrimaryColor,
+          ),
           onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "เข้าสู่ระบบผู้สูงอายุ",
-          style: TextStyle(color: Colors.white),
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
-
-              // 🔢 เลขบัตรประชาชน
-              floatingInput(
-                label: "เลขบัตรประชาชน (13 หลัก)",
-                controller: idCardCtrl,
-                keyboardType: TextInputType.number,
-              ),
-
-              const SizedBox(height: 16),
-
-              // 🔐 รหัสผ่าน
-              floatingInput(
-                label: "รหัสผ่าน",
-                controller: passCtrl,
-                obscure: true,
-              ),
-
-              const SizedBox(height: 30),
-
-              // 🔘 ปุ่มเข้าสู่ระบบ
-              SizedBox(
-                height: 60,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: goldButtonColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Icon or Logo
+                Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: primaryGreen.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person_outline_rounded,
+                      size: 60,
+                      color: primaryGreen,
                     ),
                   ),
-                  onPressed: isLoading ? null : _login,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          "เข้าสู่ระบบ",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
-
-              // สมัครสมาชิก
-              TextButton(
-                onPressed: isLoading
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterPage(role: 'elderly'),
-                          ),
-                        );
-                      },
-                child: const Text(
-                  "สมัครสมาชิก",
+                const Text(
+                  "เข้าสู่ระบบ",
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimaryColor,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  "สำหรับผู้สูงอายุ",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 32),
 
-              const SizedBox(height: 40),
-            ],
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      _buildTextField(
+                        controller: idCardCtrl,
+                        label: "เลขบัตรประชาชน (13 หลัก)",
+                        icon: Icons.credit_card_rounded,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          ThaiIdInputFormatter(),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: passCtrl,
+                        label: "รหัสผ่าน",
+                        icon: Icons.lock_outline_rounded,
+                        obscure: true,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _login(),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryGreen,
+                      elevation: 4,
+                      shadowColor: primaryGreen.withOpacity(0.4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: isLoading ? null : _login,
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "เข้าสู่ระบบ",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "ยังไม่มีบัญชี? ",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    ),
+                    TextButton(
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const RegisterPage(role: 'elderly'),
+                                ),
+                              );
+                            },
+                      child: const Text(
+                        "สมัครสมาชิก",
+                        style: TextStyle(
+                          color: primaryGreen,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // Custom simple text field for this page's aesthetic
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscure = false,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    TextInputAction? textInputAction,
+    Function(String)? onSubmitted,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
+      style: const TextStyle(fontSize: 16, color: textPrimaryColor),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey[600]),
+        prefixIcon: Icon(icon, color: primaryGreen),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryGreen, width: 2),
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF9FAFB),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
         ),
       ),
     );
@@ -238,7 +346,10 @@ class _LoginPageState extends State<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 4),
       ),
     );

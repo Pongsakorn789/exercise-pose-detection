@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FitAI - แอปออกกำลังกายอัจฉริยะ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -40,101 +42,357 @@
       font-weight: bold;
       min-width: 20px;
       text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
   </style>
 </head>
+
 <body>
-<!-- Header -->
-<div class="header">
-  <div class="header-content">
-    <div class="logo">
-      <i class="fas fa-dumbbell"></i>
-      FitAI
+  <div class="app-container">
+    <!-- Top Card -->
+    <div class="top-info-card">
+      <div class="brand">
+        <i class="fas fa-dumbbell"></i> FitAI
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat-box">
+          <span id="top-rounds">0</span>
+          <label>รอบ</label>
+        </div>
+        <div class="mini-stat-box">
+          <span id="top-reps">0</span>
+          <label>ครั้ง</label>
+        </div>
+      </div>
     </div>
-    <div class="header-stats">
-      <div class="stat-item">
-        <div class="stat-value" id="total-rounds">0</div>
-        <div class="stat-label">รอบ</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="total-reps">0</div>
-        <div class="stat-label">ครั้ง</div>
-      </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="status">
+      กรุณาเปิดกล้องวิดีโอ
     </div>
-  </div>
-</div>
 
-<!-- Control Panel -->
-<button id="toggleInstruction" class="action-button">
-  <i class="fas fa-book"></i> ซ่อนคำแนะนำ
-</button>
+    <!-- Video Area -->
+    <div class="video-wrapper" id="webcamContainer">
+      <div id="detection-indicator" class="body-status-badge full-body-hidden">ไม่เห็นทั้งตัว</div>
 
-<div class="control-panel">
-  <button id="webcamButton" class="action-button">
-    <i class="fas fa-camera"></i>
-    เปิดกล้อง
-  </button>
-  <button id="resetButton" class="action-button">
-    <i class="fas fa-redo"></i>
-    รีเซ็ตระบบ
-  </button>
-  <button id="testCountButton" class="action-button">
-    <i class="fas fa-flask"></i>
-    ทดสอบนับ
-  </button>
-  <button id="fullscreenButton" class="action-button">
-    <i class="fas fa-expand"></i>
-    เต็มจอ
-  </button>
-
-  <!-- ปุ่มดูสถิติใหม่ -->
-  <button id="statisticsButton" class="action-button" onclick="window.location.href='statistics.html'">
-    <i class="fas fa-chart-bar"></i>
-    ดูสถิติ
-  </button>
-</div>
-
-
-<!-- Status Display -->
-<div id="status" class="status">กรุณาเปิดกล้องวิดีโอ</div>
-
-<!-- Main Exercise Content -->
-<div id="demos" class="exercise-content">
-  <div class="webcam-section">
-    <!-- Webcam Container -->
-    <div id="webcamContainer" class="webcam-container">
-      <!-- Detection Indicator -->
-      <div id="detection-indicator" class="detection-indicator full-body-hidden">
-        <span>ไม่เห็นทั้งตัว</span>
+      <!-- In-video Stats Card -->
+      <div class="video-stats-card">
+        <div class="card-title">บันทึกการออกกำลังกาย</div>
+        <div class="reps-row">
+          <div class="rep-col">
+            <div class="rep-val text-right-color" id="disp-right">0</div>
+            <div class="rep-label">ข้างขวา</div>
+          </div>
+          <div class="rep-col">
+            <div class="rep-val text-left-color" id="disp-left">0</div>
+            <div class="rep-label">ข้างซ้าย</div>
+          </div>
+        </div>
+        <div class="round-row">
+          รอบที่ <span id="round-counter-display">0</span>
+        </div>
       </div>
+
       <video id="webcam" autoplay muted></video>
-      <canvas id="output_canvas" class="canvas-output"></canvas>
-    </div>
-    <div id="position-display"></div>
-  </div>
+      <canvas id="output_canvas"></canvas>
 
-  <div class="counter-section">
-    <!-- Fitness Stats -->
-    <!-- <div class="fitness-stats">
-      <div class="stats-header"> -->
-        สถิติการออกกำลังกาย
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number" id="session-time">0:00</div>
-          <div class="stat-text">เวลาออกกำลังกาย</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="calories-burned">0</div>
-          <div class="stat-text">แคลอรี่เผาผลาญ</div>
-        </div>
+      <!-- In-video Controls -->
+      <div class="video-controls">
+        <button id="webcamButton" class="vid-btn btn-yellow">
+          <i class="fas fa-camera"></i> เปิดกล้อง
+        </button>
+        <button id="fullscreenButton" class="vid-btn btn-teal">
+          <i class="fas fa-expand"></i> เต็มหน้าจอ
+        </button>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Debug Panel
+    <!-- Bottom Action -->
+    <button id="finishButton" class="bottom-action-btn" onclick="finishExercise()">
+      <i class="fas fa-file-alt"></i> ดูสรุปผล
+    </button>
+
+    <!-- Legacy Elements (Hidden but required by script) -->
+    <div id="position-display" style="display:none;"></div>
+    <div class="control-panel hidden" style="display:none;">
+      <button id="resetButton">Reset</button>
+      <button id="testCountButton">Test</button>
+      <button id="toggleInstruction">Inst</button>
+      <button id="statisticsButton">Stat</button>
+    </div>
+    <div id="session-time" style="display:none;">0:00</div>
+
+  </div>
+
+  <style>
+    body {
+      background-color: #F8F9FA;
+      /* Soft background */
+      padding: 16px;
+      margin: 0;
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Top Info Card */
+    .top-info-card {
+      background: white;
+      border-radius: 16px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #3E8E75;
+      /* Green */
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-stats {
+      display: flex;
+      gap: 12px;
+    }
+
+    .mini-stat-box {
+      background: #FFF0F0;
+      border-radius: 10px;
+      padding: 6px 14px;
+      text-align: center;
+      min-width: 50px;
+    }
+
+    .mini-stat-box span {
+      display: block;
+      font-weight: bold;
+      color: #EF5350;
+      font-size: 16px;
+      line-height: 1.1;
+    }
+
+    .mini-stat-box label {
+      font-size: 10px;
+      color: #EF5350;
+      opacity: 0.8;
+      font-weight: 600;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      /* Reusing #status style logic but cleaner */
+      background: white;
+      padding: 14px;
+      border-radius: 16px;
+      text-align: center;
+      color: #555;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      font-size: 16px;
+    }
+
+    #status {
+      /* Ensure legacy ID works with new style */
+      margin: 0;
+    }
+
+    /* Video Wrapper */
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      background: black;
+      border-radius: 24px;
+      overflow: hidden;
+      aspect-ratio: 9/16;
+      /* Portrait default */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (min-width: 600px) {
+      .video-wrapper {
+        aspect-ratio: 4/3;
+      }
+    }
+
+    video,
+    canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleX(-1);
+      /* Mirror */
+    }
+
+    /* Badge */
+    .body-status-badge {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .full-body-hidden {
+      background-color: #EF5350;
+    }
+
+    .full-body-visible {
+      background-color: #66BB6A;
+    }
+
+    /* Video Stats Card */
+    .video-stats-card {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(14, 25, 31, 0.85);
+      /* Dark */
+      border: 1px solid #4ECDC4;
+      border-radius: 16px;
+      padding: 16px;
+      width: 150px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 10px;
+      color: #4ECDC4;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .reps-row {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+
+    .rep-col {
+      text-align: center;
+    }
+
+    .rep-val {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .text-right-color {
+      color: #4ECDC4;
+    }
+
+    .text-left-color {
+      color: #FF6B6B;
+    }
+
+    .rep-label {
+      font-size: 10px;
+      color: #CCC;
+    }
+
+    .round-row {
+      font-size: 12px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .round-row span {
+      color: #FFA726;
+      font-size: 16px;
+    }
+
+    /* Video Controls */
+    .video-controls {
+      position: absolute;
+      bottom: 0px;
+      left: 0px;
+      right: 0px;
+      display: flex;
+      z-index: 10;
+    }
+
+    .vid-btn {
+      flex: 1;
+      border: none;
+      padding: 16px;
+      font-weight: bold;
+      color: white;
+      font-size: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .btn-yellow {
+      background: #FFB74D;
+      border-radius: 0 24px 0 24px;
+      /* Creative corner */
+      border-radius: 0;
+      /* Flat */
+      background: #FFA726;
+    }
+
+    .btn-teal {
+      background: #26A69A;
+    }
+
+    /* Bottom Action Button */
+    .bottom-action-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #4DD0E1, #00ACC1);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 172, 193, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.2s;
+    }
+
+    .bottom-action-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Helpers */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+
+  <!-- Debug Panel
 <div id="debug-panel" class="debug-panel hidden">
   <h3>ข้อมูลดีบัก</h3>
   <div id="debug-content"></div>
@@ -143,121 +401,121 @@
   </button>
 </div> -->
 
-<!-- Achievement Animation -->
-<div id="achievement-animation">
-  <div id="achievement-text">🎉 เยี่ยมมาก! 🎉</div>
-  <div id="achievement-subtext">คุณทำครบเป้าหมายแล้ว</div>
-  <button id="continue-button">ดำเนินการต่อ</button>
-</div>
+  <!-- Achievement Animation -->
+  <div id="achievement-animation">
+    <div id="achievement-text">🎉 เยี่ยมมาก! 🎉</div>
+    <div id="achievement-subtext">คุณทำครบเป้าหมายแล้ว</div>
+    <button id="continue-button">ดำเนินการต่อ</button>
+  </div>
 
-<!-- JavaScript Files -->
-<script src="utils.js" type="module"></script>
-<script src="event-system.js" type="module"></script>
-<script src="counter-display.js" type="module"></script>
-<script src="countdown-system.js" type="module"></script>
-<script src="hold-timer.js" type="module"></script>
-<script src="video-overlay-display.js" type="module"></script>
-<script src="exercise2.js" type="module"></script>
-<script src="exercise-tracker.js" type="module"></script>
-<script src="main.js" type="module"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="enhanced-position-tracker.js" type="module"></script>
-<script src="angle-display.js" type="module"></script>
+  <!-- JavaScript Files -->
+  <script src="utils.js" type="module"></script>
+  <script src="event-system.js" type="module"></script>
+  <script src="counter-display.js" type="module"></script>
+  <script src="countdown-system.js" type="module"></script>
+  <script src="hold-timer.js" type="module"></script>
+  <script src="video-overlay-display.js" type="module"></script>
+  <script src="exercise2.js" type="module"></script>
+  <script src="exercise-tracker.js" type="module"></script>
+  <script src="main.js" type="module"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="enhanced-position-tracker.js" type="module"></script>
+  <script src="angle-display.js" type="module"></script>
 
-<script>
-  // อัปเดต badge แสดงจำนวนวันที่ออกกำลังกาย
-  function updateStatisticsBadge() {
-    const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '{}');
-    const totalDays = Object.keys(exerciseHistory).length;
+  <script>
+    // อัปเดต badge แสดงจำนวนวันที่ออกกำลังกาย
+    function updateStatisticsBadge() {
+      const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '{}');
+      const totalDays = Object.keys(exerciseHistory).length;
 
-    const statsButton = document.getElementById('statisticsButton');
-    if (statsButton && totalDays > 0) {
-      // ตรวจสอบว่ามี badge อยู่แล้วหรือไม่
-      let badge = statsButton.querySelector('.stat-badge');
-      if (!badge) {
-        badge = document.createElement('span');
-        badge.className = 'stat-badge';
-        statsButton.style.position = 'relative';
-        statsButton.appendChild(badge);
+      const statsButton = document.getElementById('statisticsButton');
+      if (statsButton && totalDays > 0) {
+        // ตรวจสอบว่ามี badge อยู่แล้วหรือไม่
+        let badge = statsButton.querySelector('.stat-badge');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'stat-badge';
+          statsButton.style.position = 'relative';
+          statsButton.appendChild(badge);
+        }
+        badge.textContent = totalDays;
+
+        // เพิ่มเอฟเฟกต์ pulse ถ้ามีข้อมูลใหม่
+        badge.style.animation = 'pulse 1s ease-in-out';
+        setTimeout(() => {
+          badge.style.animation = '';
+        }, 1000);
       }
-      badge.textContent = totalDays;
-
-      // เพิ่มเอฟเฟกต์ pulse ถ้ามีข้อมูลใหม่
-      badge.style.animation = 'pulse 1s ease-in-out';
-      setTimeout(() => {
-        badge.style.animation = '';
-      }, 1000);
     }
-  }
 
-  // Fullscreen toggle
-  document.addEventListener("DOMContentLoaded", () => {
-    // อัปเดต badge เมื่อโหลดหน้า
-    updateStatisticsBadge();
-
-    // อัปเดตสถิติในหน้าหลัก
-    updateMainPageStats();
-
-    // ตั้งค่าปุ่ม fullscreen
-    const container = document.getElementById("webcamContainer");
-    const btn = document.getElementById("fullscreenButton");
-
-    btn.addEventListener("click", () => {
-      if (!document.fullscreenElement) {
-        container.requestFullscreen().then(() => {
-          btn.innerHTML = '<i class="fas fa-compress"></i> ออกจากเต็มจอ';
-        });
-      } else {
-        document.exitFullscreen().then(() => {
-          btn.innerHTML = '<i class="fas fa-expand"></i> เต็มจอ';
-        });
-      }
-    });
-  });
-
-  // อัปเดต badge เมื่อมีการบันทึกข้อมูลใหม่
-  document.addEventListener('roundCompleted', () => {
-    setTimeout(() => {
+    // Fullscreen toggle
+    document.addEventListener("DOMContentLoaded", () => {
+      // อัปเดต badge เมื่อโหลดหน้า
       updateStatisticsBadge();
+
+      // อัปเดตสถิติในหน้าหลัก
       updateMainPageStats();
-    }, 100);
-  });
 
-  // ฟังก์ชันอัปเดตสถิติบนหน้าหลัก
-  function updateMainPageStats() {
-    const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '{}');
-    let totalRounds = 0;
-    let totalReps = 0;
+      // ตั้งค่าปุ่ม fullscreen
+      const container = document.getElementById("webcamContainer");
+      const btn = document.getElementById("fullscreenButton");
 
-    Object.values(exerciseHistory).forEach(day => {
-      Object.values(day).forEach(exercise => {
-        totalRounds += exercise.rounds || 0;
-        totalReps += (exercise.leftReps || 0) + (exercise.rightReps || 0);
+      btn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          container.requestFullscreen().then(() => {
+            btn.innerHTML = '<i class="fas fa-compress"></i> ออกจากเต็มจอ';
+          });
+        } else {
+          document.exitFullscreen().then(() => {
+            btn.innerHTML = '<i class="fas fa-expand"></i> เต็มจอ';
+          });
+        }
       });
     });
 
-    // อัปเดตค่าใน header
-    const roundsElement = document.getElementById('total-rounds');
-    const repsElement = document.getElementById('total-reps');
+    // อัปเดต badge เมื่อมีการบันทึกข้อมูลใหม่
+    document.addEventListener('roundCompleted', () => {
+      setTimeout(() => {
+        updateStatisticsBadge();
+        updateMainPageStats();
+      }, 100);
+    });
 
-    if (roundsElement) roundsElement.textContent = totalRounds;
-    if (repsElement) repsElement.textContent = totalReps;
-  }
+    // ฟังก์ชันอัปเดตสถิติบนหน้าหลัก
+    function updateMainPageStats() {
+      const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '{}');
+      let totalRounds = 0;
+      let totalReps = 0;
 
-  // เพิ่ม animation สำหรับ badge
-  const style = document.createElement('style');
-  style.textContent = `
+      Object.values(exerciseHistory).forEach(day => {
+        Object.values(day).forEach(exercise => {
+          totalRounds += exercise.rounds || 0;
+          totalReps += (exercise.leftReps || 0) + (exercise.rightReps || 0);
+        });
+      });
+
+      // อัปเดตค่าใน header
+      const roundsElement = document.getElementById('top-rounds');
+      const repsElement = document.getElementById('top-reps');
+
+      if (roundsElement) roundsElement.textContent = totalRounds;
+      if (repsElement) repsElement.textContent = totalReps;
+    }
+
+    // เพิ่ม animation สำหรับ badge
+    const style = document.createElement('style');
+    style.textContent = `
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.2); }
       100% { transform: scale(1); }
     }
   `;
-  document.head.appendChild(style);
-</script>
+    document.head.appendChild(style);
+  </script>
 
-<!-- ระบบบันทึกอัตโนมัติ -->
-<script>
+  <!-- ระบบบันทึกอัตโนมัติ -->
+  <script>
     // สร้าง counter
     let leftCounter = 0;
     let rightCounter = 0;
@@ -266,6 +524,15 @@
 
     // ฟังก์ชันส่งข้อมูลไปยัง Flutter
     function sendCounterUpdate() {
+      // อัปเดตหน้าจอ
+      const dispLeft = document.getElementById('disp-left');
+      const dispRight = document.getElementById('disp-right');
+      const dispRound = document.getElementById('round-counter-display');
+
+      if (dispLeft) dispLeft.innerText = leftCounter;
+      if (dispRight) dispRight.innerText = rightCounter;
+      if (dispRound) dispRound.innerText = roundCounter;
+
       if (window.flutter_inappwebview) {
         window.flutter_inappwebview.callHandler('updateCounter', {
           leftCounter: leftCounter,
@@ -283,6 +550,31 @@
           rounds: 1,
           leftReps: leftCounter,
           rightReps: rightCounter
+        });
+      }
+    }
+
+    // ฟังก์ชันจบการออกกำลังกาย (Manual)
+    function finishExercise() {
+      const timeText = document.getElementById('session-time')?.innerText || "0:00";
+      const parts = timeText.split(':');
+      let durationSec = 0;
+      if (parts.length === 2) {
+        durationSec = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+      } else if (parts.length === 3) {
+        durationSec = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+      }
+
+      const total = leftCounter + rightCounter;
+
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('saveExerciseData', {
+          rounds: roundCounter,
+          total: total,
+          left: leftCounter,
+          right: rightCounter,
+          durationSec: durationSec,
+          date: new Date().toISOString()
         });
       }
     }
@@ -316,22 +608,23 @@
         console.log('🎉 ครบรอบที่ ' + roundCounter + '! บันทึกอัตโนมัติแล้ว');
       }
     }
-</script>
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.exercise-overlay > div').forEach(box => {
-      const text = box.innerText || '';
+  </script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.exercise-overlay > div').forEach(box => {
+        const text = box.innerText || '';
 
-      // ลบเฉพาะ 2 กล่องนี้
-      if (
-        text.includes('ออกกำลังกายปัจจุบัน') ||
-        text.includes('เซสชันนี้')
-      ) {
-        box.remove();
-      }
+        // ลบเฉพาะ 2 กล่องนี้
+        if (
+          text.includes('ออกกำลังกายปัจจุบัน') ||
+          text.includes('เซสชันนี้')
+        ) {
+          box.remove();
+        }
+      });
     });
-  });
-</script>
+  </script>
 
 </body>
+
 </html>

@@ -1,3 +1,6 @@
+import 'package:flutter/services.dart';
+import '../utils/formatters.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -45,13 +48,24 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  /// เลือกวันเกิด + คำนวณอายุ
   Future<void> pickBirthDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(1970),
+      initialDate: DateTime(1960),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: primaryGreen,
+              onPrimary: Colors.white,
+              onSurface: textPrimaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -67,7 +81,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  /// คำนวณ BMI
   void calculateBMI() {
     final h = double.tryParse(heightCtrl.text);
     final w = double.tryParse(weightCtrl.text);
@@ -80,9 +93,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  /// ฟังก์ชันสมัครสมาชิก
   Future<void> _register() async {
-    // ตรวจสอบข้อมูล
     if (firstNameCtrl.text.trim().isEmpty) {
       _showError("กรุณากรอกชื่อ");
       return;
@@ -108,7 +119,9 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    if (idCardCtrl.text.trim().length != 13) {
+    final cleanId = idCardCtrl.text.replaceAll('-', '').trim();
+
+    if (cleanId.length != 13) {
       _showError("กรุณากรอกเลขบัตรประชาชน 13 หลัก");
       return;
     }
@@ -136,9 +149,8 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => isLoading = true);
 
     try {
-      // สมัครสมาชิก
       final user = await auth.register(
-        email: "${idCardCtrl.text.trim()}@senior.app",
+        email: "$cleanId@senior.app",
         password: passCtrl.text,
         role: 'elderly',
       );
@@ -148,7 +160,6 @@ class _RegisterPageState extends State<RegisterPage> {
         return;
       }
 
-      // บันทึกข้อมูลเพิ่มเติมลง Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'firstName': firstNameCtrl.text.trim(),
         'lastName': lastNameCtrl.text.trim(),
@@ -157,11 +168,11 @@ class _RegisterPageState extends State<RegisterPage> {
         'height': double.parse(heightCtrl.text),
         'weight': double.parse(weightCtrl.text),
         'bmi': double.parse(bmiCtrl.text),
-        'idCard': idCardCtrl.text.trim(),
+        'idCard': cleanId,
         'acceptedPolicy': acceptPolicy,
         'acceptNews': acceptNews,
         'role': 'elderly',
-        'email': "${idCardCtrl.text.trim()}@senior.app",
+        'email': "$cleanId@senior.app",
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -208,110 +219,166 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: primaryGreen,
+      backgroundColor: softBackgroundColor,
       appBar: AppBar(
-        backgroundColor: primaryGreen,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: textPrimaryColor,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
         title: const Text(
           "สมัครสมาชิก",
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: textPrimaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            floatingInput(label: "ชื่อ", controller: firstNameCtrl),
-            const SizedBox(height: 12),
-
-            floatingInput(label: "นามสกุล", controller: lastNameCtrl),
-            const SizedBox(height: 12),
-
-            /// วันเกิด (ใช้ปฏิทิน)
-            GestureDetector(
-              onTap: pickBirthDate,
-              child: AbsorbPointer(
-                child: floatingInput(
-                  label: "วัน/เดือน/ปีเกิด",
-                  controller: birthCtrl,
+            _buildSectionContainer(
+              title: "ข้อมูลส่วนตัว",
+              icon: Icons.person_rounded,
+              children: [
+                _buildTextField(
+                  label: "ชื่อ",
+                  controller: firstNameCtrl,
+                  icon: Icons.text_fields_rounded,
                 ),
-              ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  label: "นามสกุล",
+                  controller: lastNameCtrl,
+                  icon: Icons.text_fields_rounded,
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: pickBirthDate,
+                  child: AbsorbPointer(
+                    child: _buildTextField(
+                      label: "วัน/เดือน/ปีเกิด",
+                      controller: birthCtrl,
+                      icon: Icons.calendar_today_rounded,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  label: "อายุ (ปี)",
+                  controller: ageCtrl,
+                  icon: Icons.cake_rounded,
+                  enabled: false,
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
 
-            floatingInput(
-              label: "อายุ (ปี)",
-              controller: ageCtrl,
-              enabled: false,
+            const SizedBox(height: 24),
+
+            _buildSectionContainer(
+              title: "ข้อมูลสุขภาพ",
+              icon: Icons.favorite_rounded,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        label: "ส่วนสูง (ซม.)",
+                        controller: heightCtrl,
+                        icon: Icons.height_rounded,
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildTextField(
+                        label: "น้ำหนัก (กก.)",
+                        controller: weightCtrl,
+                        icon: Icons.monitor_weight_rounded,
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: calculateBMI,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: primaryGreen,
+                      side: const BorderSide(color: primaryGreen),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.calculate_rounded),
+                    label: const Text("คำนวณ BMI"),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  label: "BMI",
+                  controller: bmiCtrl,
+                  icon: Icons.speed_rounded,
+                  enabled: false,
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
 
-            floatingInput(
-              label: "ส่วนสูง (ซม.)",
-              controller: heightCtrl,
-              keyboardType: TextInputType.number,
+            const SizedBox(height: 24),
+
+            _buildSectionContainer(
+              title: "ข้อมูลบัญชีผู้ใช้",
+              icon: Icons.lock_outline_rounded,
+              children: [
+                _buildTextField(
+                  label: "เลขบัตรประชาชน (13 หลัก)",
+                  controller: idCardCtrl,
+                  icon: Icons.credit_card_rounded,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    ThaiIdInputFormatter(),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  label: "รหัสผ่าน",
+                  controller: passCtrl,
+                  icon: Icons.lock_rounded,
+                  obscure: true,
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  label: "ยืนยันรหัสผ่าน",
+                  controller: confirmCtrl,
+                  icon: Icons.lock_reset_rounded,
+                  obscure: true,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _register(),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
 
-            floatingInput(
-              label: "น้ำหนัก (กก.)",
-              controller: weightCtrl,
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
 
-            ElevatedButton(
-              onPressed: calculateBMI,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: primaryGreen,
-              ),
-              child: const Text("คำนวณ BMI"),
-            ),
-            const SizedBox(height: 12),
-
-            floatingInput(
-              label: "BMI",
-              controller: bmiCtrl,
-              enabled: false,
-            ),
-            const SizedBox(height: 12),
-
-            floatingInput(
-              label: "เลขบัตรประชาชน (13 หลัก)",
-              controller: idCardCtrl,
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-
-            floatingInput(
-              label: "ตั้งรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)",
-              controller: passCtrl,
-              obscure: true,
-            ),
-            const SizedBox(height: 12),
-
-            floatingInput(
-              label: "ยืนยันรหัสผ่าน",
-              controller: confirmCtrl,
-              obscure: true,
-            ),
-            const SizedBox(height: 10),
-
-            /// Checkbox ยอมรับเงื่อนไข
             CheckboxListTile(
               value: acceptPolicy,
               onChanged: (v) => setState(() => acceptPolicy = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              activeColor: goldButtonColor,
-              checkColor: Colors.white,
+              activeColor: primaryGreen,
               title: const Text(
-                "ฉันยอมรับ เงื่อนไขการใช้งาน และนโยบายการคุ้มครองข้อมูลส่วนบุคคล\nรวมถึงการใช้ข้อมูลเพื่อปรับปรุงบริการ",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                "ฉันยอมรับ เงื่อนไขการใช้งาน และนโยบายการคุ้มครองข้อมูลส่วนบุคคล",
+                style: TextStyle(fontSize: 14, color: textPrimaryColor),
               ),
             ),
 
@@ -319,24 +386,25 @@ class _RegisterPageState extends State<RegisterPage> {
               value: acceptNews,
               onChanged: (v) => setState(() => acceptNews = v ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              activeColor: goldButtonColor,
-              checkColor: Colors.white,
+              activeColor: primaryGreen,
               title: const Text(
-                "ฉันต้องการรับข่าวสารและคำแนะนำเกี่ยวกับการออกกำลังกาย (ไม่บังคับ)",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                "ฉันต้องการรับข่าวสารและคำแนะนำ (ไม่บังคับ)",
+                style: TextStyle(fontSize: 14, color: textPrimaryColor),
               ),
             ),
-            const SizedBox(height: 10),
 
-            /// ปุ่มสมัคร
+            const SizedBox(height: 32),
+
             SizedBox(
-              height: 60,
+              height: 56,
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: goldButtonColor,
+                  backgroundColor: primaryGreen,
+                  elevation: 4,
+                  shadowColor: primaryGreen.withOpacity(0.4),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 onPressed: isLoading ? null : _register,
@@ -350,17 +418,105 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       )
                     : const Text(
-                        "สมัครสมาชิก",
+                        "ลงทะเบียนใช้งาน",
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionContainer({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: primaryGreen, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textPrimaryColor,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 24, color: Colors.grey),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscure = false,
+    bool enabled = true,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    TextInputAction? textInputAction,
+    Function(String)? onSubmitted,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
+      style: const TextStyle(fontSize: 16, color: textPrimaryColor),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey[600]),
+        prefixIcon: Icon(icon, color: enabled ? primaryGreen : Colors.grey),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryGreen, width: 2),
+        ),
+        filled: true,
+        fillColor: enabled ? const Color(0xFFF9FAFB) : Colors.grey[100],
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
         ),
       ),
     );
@@ -371,7 +527,10 @@ class _RegisterPageState extends State<RegisterPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 4),
       ),
     );

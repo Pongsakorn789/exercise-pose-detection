@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import '../widgets/ui_components.dart';
 
 class DumbbellExercisePage extends StatefulWidget {
   const DumbbellExercisePage({super.key});
@@ -37,16 +38,6 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
     }
 
     try {
-      // Data structure to save
-      // 1. ชื่อผู้ใช้ (User Name) - Normally stored in user profile, but we can just rely on uid.
-      // 2. วันที่ (Date) - from data
-      // 3. เวลา (Time) - from data
-      // 4. ข้างซ้าย (Left)
-      // 5. ข้างขวา (Right)
-      // 6. จำนวนรอบ (Rounds)
-      // 7. รวมครั้ง (Total)
-      // 8. ระยะเวลา (Duration)
-
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -86,44 +77,87 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: softBackgroundColor,
       appBar: AppBar(
-        title: const Text('ท่ายกดัมเบล'),
-        backgroundColor: Colors.black,
+        title: const Text(
+          'ท่ายกดัมเบล',
+          style: TextStyle(
+            color: textPrimaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: textPrimaryColor,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: InAppWebView(
-        initialUrlRequest: URLRequest(
-          url: WebUri('http://localhost:8080/index.html'),
-        ),
-        initialSettings: InAppWebViewSettings(
-          javaScriptEnabled: true,
-          allowsInlineMediaPlayback: true,
-          mediaPlaybackRequiresUserGesture: false,
-        ),
-        onWebViewCreated: (controller) {
-          controller.addJavaScriptHandler(
-            handlerName: 'saveExerciseData',
-            callback: (args) {
-              // args[0] คือข้อมูลที่ส่งมาจาก JS
-              if (args.isNotEmpty) {
-                final data = args[0] as Map<String, dynamic>;
-                _saveToFirebase(data);
-                return 'Saved';
-              }
-              return 'No Data';
-            },
-          );
-        },
-        onPermissionRequest: (controller, request) async {
-          return PermissionResponse(
-            resources: request.resources,
-            action: PermissionResponseAction.GRANT,
-          );
-        },
-        onConsoleMessage: (controller, message) {
-          debugPrint('WEB ▶ ${message.message}');
-        },
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              "จัดตำแหน่งร่างกายให้อยู่ในกรอบ",
+              style: TextStyle(fontSize: 16, color: textSecondaryColor),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              decoration: BoxDecoration(
+                color: Colors.black, // Camera background
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: InAppWebView(
+                  initialUrlRequest: URLRequest(
+                    url: WebUri('http://localhost:8080/index.html'),
+                  ),
+                  initialSettings: InAppWebViewSettings(
+                    javaScriptEnabled: true,
+                    allowsInlineMediaPlayback: true,
+                    mediaPlaybackRequiresUserGesture: false,
+                  ),
+                  onWebViewCreated: (controller) {
+                    controller.addJavaScriptHandler(
+                      handlerName: 'saveExerciseData',
+                      callback: (args) {
+                        if (args.isNotEmpty) {
+                          final data = args[0] as Map<String, dynamic>;
+                          _saveToFirebase(data);
+                          return 'Saved';
+                        }
+                        return 'No Data';
+                      },
+                    );
+                  },
+                  onPermissionRequest: (controller, request) async {
+                    return PermissionResponse(
+                      resources: request.resources,
+                      action: PermissionResponseAction.GRANT,
+                    );
+                  },
+                  onConsoleMessage: (controller, message) {
+                    debugPrint('WEB ▶ ${message.message}');
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
