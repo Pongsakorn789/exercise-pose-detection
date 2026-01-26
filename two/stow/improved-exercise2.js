@@ -52,7 +52,7 @@ const LANDMARK_STYLES = {
   CONNECTOR_COLOR: 'rgba(255, 255, 255, 0.7)',
   // *** เพิ่มสีสำหรับการแจ้งเตือนลำตัวเอียง ***
   BODY_TILT_COLOR: 'rgba(255, 152, 0, 0.9)', // สีส้มสำหรับแจ้งเตือนลำตัวเอียง
-  
+
   BASE_LANDMARK_SIZE: 8,
   BASE_LINE_WIDTH: 3,
   ANGLE_BG_COLOR: 'rgba(0, 0, 0, 0.7)',
@@ -75,28 +75,28 @@ function calculateBodyTilt(leftShoulder, rightShoulder, leftHip, rightHip) {
     x: (leftShoulder.x + rightShoulder.x) / 2,
     y: (leftShoulder.y + rightShoulder.y) / 2
   };
-  
+
   const hipCenter = {
     x: (leftHip.x + rightHip.x) / 2,
     y: (leftHip.y + rightHip.y) / 2
   };
-  
+
   // คำนวณมุมเอียงของแกนลำตัว
   const deltaX = hipCenter.x - shoulderCenter.x;
   const deltaY = hipCenter.y - shoulderCenter.y;
-  
+
   // คำนวณมุมจากแนวตั้ง
   let tiltAngle = Math.atan2(Math.abs(deltaX), Math.abs(deltaY)) * (180 / Math.PI);
-  
+
   // กำหนดทิศทางการเอียง
   let tiltDirection = 'center';
   if (Math.abs(deltaX) > 5) { // มีการเอียงที่มีนัยสำคัญ
     tiltDirection = deltaX > 0 ? 'right' : 'left';
   }
-  
+
   // ตรวจสอบว่าลำตัวตรงหรือไม่
   const isStraight = tiltAngle <= MAX_BODY_TILT_ANGLE;
-  
+
   return {
     angle: tiltAngle,
     isStraight: isStraight,
@@ -117,7 +117,7 @@ function checkBodyStraightness(landmarks) {
   const rightShoulder = landmarks[12];
   const leftHip = landmarks[23];
   const rightHip = landmarks[24];
-  
+
   // ตรวจสอบว่ามีจุดสำคัญครบหรือไม่
   if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) {
     return {
@@ -127,31 +127,31 @@ function checkBodyStraightness(landmarks) {
       tiltDirection: 'unknown'
     };
   }
-  
+
   // แปลงเป็นพิกัดพิกเซล
   const leftShoulderPx = {
     x: leftShoulder.x * globals.canvasElement.width,
     y: leftShoulder.y * globals.canvasElement.height
   };
-  
+
   const rightShoulderPx = {
     x: rightShoulder.x * globals.canvasElement.width,
     y: rightShoulder.y * globals.canvasElement.height
   };
-  
+
   const leftHipPx = {
     x: leftHip.x * globals.canvasElement.width,
     y: leftHip.y * globals.canvasElement.height
   };
-  
+
   const rightHipPx = {
     x: rightHip.x * globals.canvasElement.width,
     y: rightHip.y * globals.canvasElement.height
   };
-  
+
   // คำนวณการเอียงของลำตัว
   const bodyTilt = calculateBodyTilt(leftShoulderPx, rightShoulderPx, leftHipPx, rightHipPx);
-  
+
   let reason = '';
   if (!bodyTilt.isStraight) {
     if (bodyTilt.tiltDirection === 'left') {
@@ -162,7 +162,7 @@ function checkBodyStraightness(landmarks) {
       reason = `ลำตัวเอียง ${bodyTilt.angle.toFixed(1)}°`;
     }
   }
-  
+
   return {
     isStraight: bodyTilt.isStraight,
     reason: reason,
@@ -201,7 +201,7 @@ function getAngleStatus(angle) {
 
 function getAngleStatusInfo(angle, minAngle = 30, maxAngle = 45) {
   let status, color, message;
-  
+
   if (angle < minAngle) {
     status = 'low';
     color = LANDMARK_STYLES.LOW_ANGLE_COLOR;
@@ -215,14 +215,14 @@ function getAngleStatusInfo(angle, minAngle = 30, maxAngle = 45) {
     color = LANDMARK_STYLES.CORRECT_COLOR;
     message = 'ถูกต้อง';
   }
-  
+
   return { status, color, message };
 }
 
 function roundRect(ctx, x, y, width, height, radius) {
   if (width < 2 * radius) radius = width / 2;
   if (height < 2 * radius) radius = height / 2;
-  
+
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.arcTo(x + width, y, x + width, y + height, radius);
@@ -235,54 +235,54 @@ function roundRect(ctx, x, y, width, height, radius) {
 function adjustColor(color, factor) {
   const rgba = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([.\d]+)\)/);
   if (!rgba) return color;
-  
+
   const r = Math.floor(parseInt(rgba[1]) * factor);
   const g = Math.floor(parseInt(rgba[2]) * factor);
   const b = Math.floor(parseInt(rgba[3]) * factor);
   const a = parseFloat(rgba[4]);
-  
+
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
 function drawHintInfo(ctx, position, text, color, scaleFactor) {
   ctx.save();
-  
+
   const fontSize = 14 * scaleFactor;
   ctx.font = `${fontSize}px Arial`;
-  
+
   const textWidth = ctx.measureText(text).width;
   const padding = 6 * scaleFactor;
   const boxWidth = textWidth + (padding * 2);
   const boxHeight = fontSize + (padding * 1.2);
-  
+
   ctx.beginPath();
   roundRect(
-    ctx, 
+    ctx,
     position.x - (boxWidth / 2),
-    position.y - (boxHeight / 2), 
-    boxWidth, 
-    boxHeight, 
+    position.y - (boxHeight / 2),
+    boxWidth,
+    boxHeight,
     4 * scaleFactor
   );
-  
+
   ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
   ctx.shadowBlur = 3 * scaleFactor;
   ctx.shadowOffsetX = 1 * scaleFactor;
   ctx.shadowOffsetY = 1 * scaleFactor;
-  
+
   ctx.fillStyle = color.replace(/[^,]+(?=\))/, '0.7');
   ctx.fill();
-  
+
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
-  
+
   ctx.fillStyle = LANDMARK_STYLES.TEXT_COLOR;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, position.x, position.y);
-  
+
   ctx.restore();
 }
 
@@ -295,14 +295,14 @@ function drawHintInfo(ctx, position, text, color, scaleFactor) {
  */
 function drawBodyTiltIndicator(ctx, bodyCheck, scaleFactor) {
   if (!bodyCheck.shoulderCenter || !bodyCheck.hipCenter) return;
-  
+
   ctx.save();
-  
+
   // วาดเส้นแกนลำตัว
   ctx.beginPath();
   ctx.moveTo(bodyCheck.shoulderCenter.x, bodyCheck.shoulderCenter.y);
   ctx.lineTo(bodyCheck.hipCenter.x, bodyCheck.hipCenter.y);
-  
+
   // เลือกสีตามสถานะ
   if (bodyCheck.isStraight) {
     ctx.strokeStyle = LANDMARK_STYLES.CORRECT_COLOR;
@@ -310,36 +310,36 @@ function drawBodyTiltIndicator(ctx, bodyCheck, scaleFactor) {
   } else {
     ctx.strokeStyle = LANDMARK_STYLES.BODY_TILT_COLOR;
     ctx.lineWidth = 6 * scaleFactor;
-    
+
     // เพิ่มเอฟเฟกต์เรืองแสงเมื่อเอียง
     ctx.shadowColor = LANDMARK_STYLES.BODY_TILT_COLOR;
     ctx.shadowBlur = 10 * scaleFactor;
   }
-  
+
   ctx.lineCap = 'round';
   ctx.stroke();
-  
+
   // วาดจุดที่จุดกึ่งกลาง
   const centerX = (bodyCheck.shoulderCenter.x + bodyCheck.hipCenter.x) / 2;
   const centerY = (bodyCheck.shoulderCenter.y + bodyCheck.hipCenter.y) / 2;
-  
+
   ctx.beginPath();
   ctx.arc(centerX, centerY, 8 * scaleFactor, 0, 2 * Math.PI);
   ctx.fillStyle = bodyCheck.isStraight ? LANDMARK_STYLES.CORRECT_COLOR : LANDMARK_STYLES.BODY_TILT_COLOR;
   ctx.fill();
-  
+
   // วาดขอบจุด
   ctx.strokeStyle = 'white';
   ctx.lineWidth = 2 * scaleFactor;
   ctx.stroke();
-  
+
   // แสดงข้อความแจ้งเตือนถ้าลำตัวเอียง
   if (!bodyCheck.isStraight) {
     const warningPos = {
       x: centerX,
       y: centerY - 40 * scaleFactor
     };
-    
+
     drawHintInfo(
       ctx,
       warningPos,
@@ -348,7 +348,7 @@ function drawBodyTiltIndicator(ctx, bodyCheck, scaleFactor) {
       scaleFactor
     );
   }
-  
+
   ctx.restore();
 }
 
@@ -369,15 +369,15 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
   if (window.PositionTracker) {
     window.PositionTracker.recordPosition(landmarks);
   }
-  
+
   // ... รหัสการตรวจจับท่าทางอื่นๆ
 
-  
+
   utils.debugLog("ทำงานใน improvedDetectSideLegRaiseExercise");
 
   // สร้างแถบวัดมุมถ้ายังไม่มี
   if (!angleDisplayCreated) {
-    const webcamContainer = document.querySelector('.webcam-container');
+    const webcamContainer = document.getElementById('webcamContainer');
     if (webcamContainer) {
       AngleDisplay.createAngleGauge(webcamContainer);
       angleDisplayCreated = true;
@@ -401,7 +401,7 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
   // *** เพิ่มการตรวจสอบลำตัวตรง ***
   const bodyCheck = checkBodyStraightness(landmarks);
   const isBodyStraight = bodyCheck.isStraight;
-  
+
   // แปลงเป็นพิกัดพิกเซล
   let leftHipX = leftHip.x * globals.canvasElement.width;
   let rightHipX = rightHip.x * globals.canvasElement.width;
@@ -432,92 +432,92 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
 
   // คำนวณมุมการยกขาด้านข้าง
   const leftLegAbductionAngle = calculateLegAbductionAngle(
-    {x: leftHipX, y: leftHipY}, 
-    {x: leftKneeX, y: leftKneeY}
+    { x: leftHipX, y: leftHipY },
+    { x: leftKneeX, y: leftKneeY }
   );
 
   const rightLegAbductionAngle = calculateLegAbductionAngle(
-    {x: rightHipX, y: rightHipY}, 
-    {x: rightKneeX, y: rightKneeY}
+    { x: rightHipX, y: rightHipY },
+    { x: rightKneeX, y: rightKneeY }
   );
-  
+
   // ทำ smoothing ค่ามุม
   let smoothedLeftAngle = leftLegAbductionAngle;
   let smoothedRightAngle = rightLegAbductionAngle;
-  
+
   // สร้างข้อมูลขาปัจจุบัน
   const currentLeftLegData = {
     angle: leftLegAbductionAngle,
-    hip: {x: leftHipX, y: leftHipY},
-    knee: {x: leftKneeX, y: leftKneeY},
-    ankle: {x: leftAnkleX, y: leftAnkleY}
+    hip: { x: leftHipX, y: leftHipY },
+    knee: { x: leftKneeX, y: leftKneeY },
+    ankle: { x: leftAnkleX, y: leftAnkleY }
   };
-  
+
   const currentRightLegData = {
     angle: rightLegAbductionAngle,
-    hip: {x: rightHipX, y: rightHipY},
-    knee: {x: rightKneeX, y: rightKneeY},
-    ankle: {x: rightAnkleX, y: rightAnkleY}
+    hip: { x: rightHipX, y: rightHipY },
+    knee: { x: rightKneeX, y: rightKneeY },
+    ankle: { x: rightAnkleX, y: rightAnkleY }
   };
-  
+
   // ทำ smoothing สำหรับข้อมูลขาซ้าย
   if (previousLeftLegData) {
-    smoothedLeftAngle = previousLeftLegData.angle * SMOOTHING_FACTOR + 
-                        leftLegAbductionAngle * (1 - SMOOTHING_FACTOR);
-    
-    currentLeftLegData.hip.x = previousLeftLegData.hip.x * SMOOTHING_FACTOR + 
-                              leftHipX * (1 - SMOOTHING_FACTOR);
-    currentLeftLegData.hip.y = previousLeftLegData.hip.y * SMOOTHING_FACTOR + 
-                              leftHipY * (1 - SMOOTHING_FACTOR);
-    
-    currentLeftLegData.knee.x = previousLeftLegData.knee.x * SMOOTHING_FACTOR + 
-                               leftKneeX * (1 - SMOOTHING_FACTOR);
-    currentLeftLegData.knee.y = previousLeftLegData.knee.y * SMOOTHING_FACTOR + 
-                               leftKneeY * (1 - SMOOTHING_FACTOR);
-    
-    currentLeftLegData.ankle.x = previousLeftLegData.ankle.x * SMOOTHING_FACTOR + 
-                                leftAnkleX * (1 - SMOOTHING_FACTOR);
-    currentLeftLegData.ankle.y = previousLeftLegData.ankle.y * SMOOTHING_FACTOR + 
-                                leftAnkleY * (1 - SMOOTHING_FACTOR);
+    smoothedLeftAngle = previousLeftLegData.angle * SMOOTHING_FACTOR +
+      leftLegAbductionAngle * (1 - SMOOTHING_FACTOR);
+
+    currentLeftLegData.hip.x = previousLeftLegData.hip.x * SMOOTHING_FACTOR +
+      leftHipX * (1 - SMOOTHING_FACTOR);
+    currentLeftLegData.hip.y = previousLeftLegData.hip.y * SMOOTHING_FACTOR +
+      leftHipY * (1 - SMOOTHING_FACTOR);
+
+    currentLeftLegData.knee.x = previousLeftLegData.knee.x * SMOOTHING_FACTOR +
+      leftKneeX * (1 - SMOOTHING_FACTOR);
+    currentLeftLegData.knee.y = previousLeftLegData.knee.y * SMOOTHING_FACTOR +
+      leftKneeY * (1 - SMOOTHING_FACTOR);
+
+    currentLeftLegData.ankle.x = previousLeftLegData.ankle.x * SMOOTHING_FACTOR +
+      leftAnkleX * (1 - SMOOTHING_FACTOR);
+    currentLeftLegData.ankle.y = previousLeftLegData.ankle.y * SMOOTHING_FACTOR +
+      leftAnkleY * (1 - SMOOTHING_FACTOR);
   }
-  
+
   // ทำ smoothing สำหรับข้อมูลขาขวา
   if (previousRightLegData) {
-    smoothedRightAngle = previousRightLegData.angle * SMOOTHING_FACTOR + 
-                         rightLegAbductionAngle * (1 - SMOOTHING_FACTOR);
-    
-    currentRightLegData.hip.x = previousRightLegData.hip.x * SMOOTHING_FACTOR + 
-                               rightHipX * (1 - SMOOTHING_FACTOR);
-    currentRightLegData.hip.y = previousRightLegData.hip.y * SMOOTHING_FACTOR + 
-                               rightHipY * (1 - SMOOTHING_FACTOR);
-    
-    currentRightLegData.knee.x = previousRightLegData.knee.x * SMOOTHING_FACTOR + 
-                                rightKneeX * (1 - SMOOTHING_FACTOR);
-    currentRightLegData.knee.y = previousRightLegData.knee.y * SMOOTHING_FACTOR + 
-                                rightKneeY * (1 - SMOOTHING_FACTOR);
-    
-    currentRightLegData.ankle.x = previousRightLegData.ankle.x * SMOOTHING_FACTOR + 
-                                 rightAnkleX * (1 - SMOOTHING_FACTOR);
-    currentRightLegData.ankle.y = previousRightLegData.ankle.y * SMOOTHING_FACTOR + 
-                                 rightAnkleY * (1 - SMOOTHING_FACTOR);
+    smoothedRightAngle = previousRightLegData.angle * SMOOTHING_FACTOR +
+      rightLegAbductionAngle * (1 - SMOOTHING_FACTOR);
+
+    currentRightLegData.hip.x = previousRightLegData.hip.x * SMOOTHING_FACTOR +
+      rightHipX * (1 - SMOOTHING_FACTOR);
+    currentRightLegData.hip.y = previousRightLegData.hip.y * SMOOTHING_FACTOR +
+      rightHipY * (1 - SMOOTHING_FACTOR);
+
+    currentRightLegData.knee.x = previousRightLegData.knee.x * SMOOTHING_FACTOR +
+      rightKneeX * (1 - SMOOTHING_FACTOR);
+    currentRightLegData.knee.y = previousRightLegData.knee.y * SMOOTHING_FACTOR +
+      rightKneeY * (1 - SMOOTHING_FACTOR);
+
+    currentRightLegData.ankle.x = previousRightLegData.ankle.x * SMOOTHING_FACTOR +
+      rightAnkleX * (1 - SMOOTHING_FACTOR);
+    currentRightLegData.ankle.y = previousRightLegData.ankle.y * SMOOTHING_FACTOR +
+      rightAnkleY * (1 - SMOOTHING_FACTOR);
   }
-  
+
   // บันทึกข้อมูลปัจจุบันสำหรับใช้ในรอบถัดไป
   currentLeftLegData.angle = smoothedLeftAngle;
   currentRightLegData.angle = smoothedRightAngle;
   previousLeftLegData = currentLeftLegData;
   previousRightLegData = currentRightLegData;
-  
+
   // ตรวจสอบว่ามุมอยู่ในช่วงที่ถูกต้องหรือไม่
   const isLeftAngleCorrect = isAngleInCorrectRange(smoothedLeftAngle);
   const isRightAngleCorrect = isAngleInCorrectRange(smoothedRightAngle);
-  
+
   // อัปเดตแถบวัดมุม
   if (angleDisplayCreated) {
     AngleDisplay.updateAngleGauge('left', smoothedLeftAngle, isLeftAngleCorrect);
     AngleDisplay.updateAngleGauge('right', smoothedRightAngle, isRightAngleCorrect);
   }
-  
+
   // ตรวจสอบว่าขาเหยียดตรงหรือไม่
   const isLeftLegStraight = leftKneeAngle > MIN_KNEE_ANGLE;
   const isRightLegStraight = rightKneeAngle > MIN_KNEE_ANGLE;
@@ -527,15 +527,15 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
     globals.canvasCtx.save();
     globals.canvasCtx.font = "16px Arial";
     globals.canvasCtx.fillStyle = "white";
-    
+
     // แสดงตัวนับ
     globals.canvasCtx.fillText(`ซ้าย: ${globals.leftCounter}/${globals.targetReps}`, currentLeftLegData.knee.x, currentLeftLegData.knee.y - 60);
     globals.canvasCtx.fillText(`ขวา: ${globals.rightCounter}/${globals.targetReps}`, currentRightLegData.knee.x, currentRightLegData.knee.y - 60);
-    
+
     // *** วาดแสดงสถานะลำตัวเอียง ***
     const scaleFactor = Math.min(globals.canvasElement.width, globals.canvasElement.height) / 640;
     drawBodyTiltIndicator(globals.canvasCtx, bodyCheck, scaleFactor);
-    
+
     // แสดงการแจ้งเตือนเมื่อเข่างอ 
     if (!isLeftLegStraight) {
       const warningPos = {
@@ -550,7 +550,7 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
         scaleFactor
       );
     }
-    
+
     if (!isRightLegStraight) {
       const warningPos = {
         x: currentRightLegData.knee.x,
@@ -564,7 +564,7 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
         scaleFactor
       );
     }
-    
+
     globals.canvasCtx.fillStyle = "white";
   } catch (error) {
     utils.debugLog("เกิดข้อผิดพลาดในการวาด canvas:", error);
@@ -572,611 +572,611 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
 
   // สร้าง baseSamples ถ้ายังไม่มี
   // สร้าง baseSamples ถ้ายังไม่มี
- if (!window.baseSamples) {
-  window.baseSamples = [];
-}
-
-if (!window.basePositions) {
-  window.basePositions = {};
-}
-
-// เก็บตัวอย่างพื้นฐาน
-if (!window.calibrated && window.baseSamples.length < 30) {
-  window.baseSamples.push({
-    leftLegAbductionAngle: smoothedLeftAngle,
-    rightLegAbductionAngle: smoothedRightAngle
-  });
-  
-  globals.canvasCtx.fillText(`กำลังเก็บตัวอย่าง: ${window.baseSamples.length}/30`, 10, 60);
-
-  if (window.baseSamples.length >= 30) {
-    window.calibrated = true;
-    globals.statusElement.textContent = "พร้อมนับแล้ว เริ่มออกกำลังกายได้";
-    globals.statusElement.style.color = "#4CAF50";
-    utils.hideCalibrationIndicator();
+  if (!window.baseSamples) {
+    window.baseSamples = [];
   }
-}
 
-// *** ปรับปรุงการตรวจจับให้รวมการตรวจสอบลำตัวตรง ***
-if (window.calibrated) {
-  const now = Date.now();
-  const timeSinceLastCount = now - globals.lastCountTime;
-  
-  // *** เพิ่มการตรวจสอบลำตัวตรงในการนับ ***
-  
-  // ตรวจจับขาซ้าย
-  if (isLeftAngleCorrect && !globals.isLeftExtended && timeSinceLastCount > globals.autoCooldown) {
-    // *** เพิ่มเงื่อนไขตรวจสอบลำตัวตรง ***
-    if (!isBodyStraight) {
-      // แจ้งเตือนเรื่องลำตัวเอียง
-      const currentTime = Date.now();
-      if (!bodyTiltWarningShown || (currentTime - lastBodyTiltWarningTime > BODY_TILT_WARNING_COOLDOWN)) {
-        globals.statusElement.textContent = `${bodyCheck.reason} กรุณายืนให้ลำตัวตรง`;
-        globals.statusElement.style.color = "#FF5252";
-        
-        if (window.voiceFeedbackEnabled) {
-          import('./exercise-tracker.js').then(module => {
-            module.exerciseTracker.speakFeedback("ลำตัวเอียงเกินไป");
-          });
+  if (!window.basePositions) {
+    window.basePositions = {};
+  }
+
+  // เก็บตัวอย่างพื้นฐาน
+  if (!window.calibrated && window.baseSamples.length < 30) {
+    window.baseSamples.push({
+      leftLegAbductionAngle: smoothedLeftAngle,
+      rightLegAbductionAngle: smoothedRightAngle
+    });
+
+    globals.canvasCtx.fillText(`กำลังเก็บตัวอย่าง: ${window.baseSamples.length}/30`, 10, 60);
+
+    if (window.baseSamples.length >= 30) {
+      window.calibrated = true;
+      globals.statusElement.textContent = "พร้อมนับแล้ว เริ่มออกกำลังกายได้";
+      globals.statusElement.style.color = "#4CAF50";
+      utils.hideCalibrationIndicator();
+    }
+  }
+
+  // *** ปรับปรุงการตรวจจับให้รวมการตรวจสอบลำตัวตรง ***
+  if (window.calibrated) {
+    const now = Date.now();
+    const timeSinceLastCount = now - globals.lastCountTime;
+
+    // *** เพิ่มการตรวจสอบลำตัวตรงในการนับ ***
+
+    // ตรวจจับขาซ้าย
+    if (isLeftAngleCorrect && !globals.isLeftExtended && timeSinceLastCount > globals.autoCooldown) {
+      // *** เพิ่มเงื่อนไขตรวจสอบลำตัวตรง ***
+      if (!isBodyStraight) {
+        // แจ้งเตือนเรื่องลำตัวเอียง
+        const currentTime = Date.now();
+        if (!bodyTiltWarningShown || (currentTime - lastBodyTiltWarningTime > BODY_TILT_WARNING_COOLDOWN)) {
+          globals.statusElement.textContent = `${bodyCheck.reason} กรุณายืนให้ลำตัวตรง`;
+          globals.statusElement.style.color = "#FF5252";
+
+          if (window.voiceFeedbackEnabled) {
+            import('./exercise-tracker.js').then(module => {
+              module.exerciseTracker.speakFeedback("ลำตัวเอียงเกินไป");
+            });
+          }
+          bodyTiltWarningShown = true;
+          lastBodyTiltWarningTime = currentTime;
         }
-        bodyTiltWarningShown = true;
-        lastBodyTiltWarningTime = currentTime;
+        return; // ไม่นับถ้าลำตัวเอียง
       }
-      return; // ไม่นับถ้าลำตัวเอียง
-    }
-    
-    // ตรวจสอบว่าเข่าตรงหรือไม่
-    if (!isLeftLegStraight) {
-      // แจ้งเตือนเรื่องการงอเข่า
-      if (!leftKneeBendWarningShown) {
-        globals.statusElement.textContent = "เข่าซ้ายงอเกินไป ควรเหยียดเข่าให้ตรง";
-        globals.statusElement.style.color = "#FF5252";
-        
-        if (window.voiceFeedbackEnabled) {
-          import('./exercise-tracker.js').then(module => {
-            module.exerciseTracker.speakFeedback("เข่าซ้ายงอเกินไป ควรเหยียดเข่าให้ตรง");
-          });
+
+      // ตรวจสอบว่าเข่าตรงหรือไม่
+      if (!isLeftLegStraight) {
+        // แจ้งเตือนเรื่องการงอเข่า
+        if (!leftKneeBendWarningShown) {
+          globals.statusElement.textContent = "เข่าซ้ายงอเกินไป ควรเหยียดเข่าให้ตรง";
+          globals.statusElement.style.color = "#FF5252";
+
+          if (window.voiceFeedbackEnabled) {
+            import('./exercise-tracker.js').then(module => {
+              module.exerciseTracker.speakFeedback("เข่าซ้ายงอเกินไป ควรเหยียดเข่าให้ตรง");
+            });
+          }
+          leftKneeBendWarningShown = true;
         }
-        leftKneeBendWarningShown = true;
+        return; // ไม่นับถ้าเข่างอ
       }
-      return; // ไม่นับถ้าเข่างอ
-    }
-    
-    // รีเซ็ตตัวแปรแจ้งเตือน
-    leftKneeBendWarningShown = false;
-    bodyTiltWarningShown = false;
-    
-    // ผู้ใช้เริ่มยกขาซ้ายในมุมที่ถูกต้อง เข่าตรง และลำตัวตรง
-    utils.debugLog("เริ่มยกขาซ้ายในมุมที่ถูกต้อง");
-    globals.isLeftExtended = true;
-    globals.isLeftHolding = true;
-    globals.leftHoldStartTime = now;
-    leftCorrectAngleStartTime = now;
-    
-    globals.statusElement.textContent = `กำลังยกขาซ้าย (${smoothedLeftAngle.toFixed(1)}°) ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
-    globals.statusElement.style.color = "#FFA000";
-    
-    if (window.voiceFeedbackEnabled) {
-      import('./exercise-tracker.js').then(module => {
-        module.exerciseTracker.speakFeedback(`ยกขาซ้าย มุม ${Math.round(smoothedLeftAngle)} องศา ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`);
-      });
-    }
-  } 
-  // ตรวจสอบขาซ้ายที่กำลังค้าง
-  else if (globals.isLeftExtended && globals.isLeftHolding) {
-    // *** เพิ่มการตรวจสอบลำตัวตรงระหว่างค้าง ***
-    if (!isBodyStraight) {
-      // แจ้งเตือนเรื่องลำตัวเอียงระหว่างค้าง
-      globals.statusElement.textContent = `${bodyCheck.reason} การนับเวลาถูกยกเลิก`;
-      globals.statusElement.style.color = "#FF5252";
-      
-      // ยกเลิกการนับเวลา
-      globals.isLeftHolding = false;
-      globals.isLeftExtended = false;
-      globals.leftHoldStartTime = 0;
-      leftCorrectAngleStartTime = 0;
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
+
+      // รีเซ็ตตัวแปรแจ้งเตือน
+      leftKneeBendWarningShown = false;
+      bodyTiltWarningShown = false;
+
+      // ผู้ใช้เริ่มยกขาซ้ายในมุมที่ถูกต้อง เข่าตรง และลำตัวตรง
+      utils.debugLog("เริ่มยกขาซ้ายในมุมที่ถูกต้อง");
+      globals.isLeftExtended = true;
+      globals.isLeftHolding = true;
+      globals.leftHoldStartTime = now;
+      leftCorrectAngleStartTime = now;
+
+      globals.statusElement.textContent = `กำลังยกขาซ้าย (${smoothedLeftAngle.toFixed(1)}°) ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
+      globals.statusElement.style.color = "#FFA000";
+
       if (window.voiceFeedbackEnabled) {
         import('./exercise-tracker.js').then(module => {
-          module.exerciseTracker.speakFeedback("ลำตัวเอียงเกินไป");
+          module.exerciseTracker.speakFeedback(`ยกขาซ้าย มุม ${Math.round(smoothedLeftAngle)} องศา ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`);
         });
       }
-      return;
     }
-    
-    // ตรวจสอบว่าเข่ายังตรงอยู่หรือไม่
-    if (!isLeftLegStraight) {
-      // แจ้งเตือนเรื่องการงอเข่าระหว่างค้าง
-      globals.statusElement.textContent = "เข่าซ้ายงอเกินไป การนับเวลาถูกยกเลิก";
-      globals.statusElement.style.color = "#FF5252";
-      
-      // ยกเลิกการนับเวลา
-      globals.isLeftHolding = false;
-      globals.isLeftExtended = false;
-      globals.leftHoldStartTime = 0;
-      leftCorrectAngleStartTime = 0;
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
-      if (window.voiceFeedbackEnabled) {
-        import('./exercise-tracker.js').then(module => {
-          module.exerciseTracker.speakFeedback("เข่าซ้ายงอเกินไป การนับเวลาถูกยกเลิก");
-        });
-      }
-      return;
-    }
-    
-    // ตรวจสอบมุมที่กำลังค้าง
-    if (isLeftAngleCorrect) {
-      // หากมุมถูกต้อง ให้นับเวลาการค้าง
-      if (leftCorrectAngleStartTime === 0) {
-        // ถ้าเพิ่งกลับมาอยู่ในมุมที่ถูกต้อง ให้เริ่มนับเวลาใหม่
-        leftCorrectAngleStartTime = now;
-      }
-      
-      // คำนวณเวลาค้างที่มุมถูกต้อง
-      leftLegHoldTime = (now - leftCorrectAngleStartTime) / 1000;
-      
-      // อัปเดตตัวแสดงเวลาค้างขาขนาดใหญ่
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(leftLegHoldTime, REQUIRED_HOLD_TIME, true, false, true);
-      }
-      
-      // ตรวจสอบว่าค้างครบเวลาหรือไม่
-      if (leftLegHoldTime >= REQUIRED_HOLD_TIME) {
-        // ค้างครบเวลาแล้ว
+    // ตรวจสอบขาซ้ายที่กำลังค้าง
+    else if (globals.isLeftExtended && globals.isLeftHolding) {
+      // *** เพิ่มการตรวจสอบลำตัวตรงระหว่างค้าง ***
+      if (!isBodyStraight) {
+        // แจ้งเตือนเรื่องลำตัวเอียงระหว่างค้าง
+        globals.statusElement.textContent = `${bodyCheck.reason} การนับเวลาถูกยกเลิก`;
+        globals.statusElement.style.color = "#FF5252";
+
+        // ยกเลิกการนับเวลา
         globals.isLeftHolding = false;
-        
-        // อัปเดตตัวแสดงเวลา (ครบเวลาแล้ว)
-        if (angleDisplayCreated) {
-          AngleDisplay.updateHoldTimer(REQUIRED_HOLD_TIME, REQUIRED_HOLD_TIME, false, true, true);
-        }
-        
-        globals.statusElement.textContent = `ค้างขาซ้ายครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`;
-        globals.statusElement.style.color = "#4CAF50";
-        
-        if (!globals.leftHoldNotified && window.voiceFeedbackEnabled) {
-          globals.leftHoldNotified = true;
-          import('./exercise-tracker.js').then(module => {
-            module.exerciseTracker.speakFeedback(`ค้างขาซ้ายครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`);
-          });
-        }
-      } else {
-        // กำลังค้าง แต่ยังไม่ครบเวลา
-        globals.statusElement.textContent = `กำลังค้างขาซ้าย ${leftLegHoldTime.toFixed(1)}/${REQUIRED_HOLD_TIME} วินาที (มุม ${smoothedLeftAngle.toFixed(1)}°)`;
-        globals.statusElement.style.color = "#FFA000";
-      }
-    } else {
-      // มุมไม่ถูกต้อง แต่ยังกำลังค้างขาอยู่
-      leftCorrectAngleStartTime = 0;
-      
-      // อัปเดตตัวแสดงเวลาค้างขา โดยใช้เวลาเดิม แต่กำหนด isAngleCorrect = false
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(leftLegHoldTime, REQUIRED_HOLD_TIME, true, false, false);
-      }
-      
-      // แสดงข้อความแนะนำให้ปรับมุม
-      const angleStatus = getAngleStatus(smoothedLeftAngle);
-      let statusMessage = "";
-      
-      if (angleStatus === 'low') {
-        statusMessage = `มุมขาซ้ายต่ำเกินไป (${smoothedLeftAngle.toFixed(1)}°) ควรยกให้สูงขึ้น`;
-      } else {
-        statusMessage = `มุมขาซ้ายสูงเกินไป (${smoothedLeftAngle.toFixed(1)}°) ควรลดมุมลง`;
-      }
-      
-      globals.statusElement.textContent = statusMessage;
-      globals.statusElement.style.color = "#FF5252";
-    }
-  }
-  // ตรวจสอบการวางขาซ้ายกลับที่เดิม (หลังจากค้างครบเวลา)
-  else if (!isLeftAngleCorrect && globals.isLeftExtended) {
-    // ผู้ใช้วางขาลงแล้ว (มุมไม่อยู่ในช่วง 30-45 องศา)
-    
-    // ตรวจสอบว่าได้ค้างขาครบเวลาหรือไม่
-    if (globals.leftHoldStartTime > 0 && !globals.isLeftHolding) {
-      // นับการออกกำลังกาย 1 ครั้ง
-      utils.debugLog("นับการยกขาซ้าย 1 ครั้ง");
-      
-      globals.leftCounter++;
-      globals.lastCountTime = now;
-      globals.isLeftExtended = false;
-      globals.leftHoldStartTime = 0;
-      globals.leftHoldNotified = false;
-      leftCorrectAngleStartTime = 0;
-      
-      // แสดงผลการนับ
-      globals.statusElement.textContent = `นับขาซ้าย ${globals.leftCounter}/${globals.targetReps} ครั้ง!`;
-      globals.statusElement.style.color = "#4CAF50";
-      
-      // แสดงเอฟเฟกต์การนับ
-      utils.showCountEffect(true);
-      
-      // อัปเดตตัวนับ
-      EventSystem.updateCounter({
-        leftCounter: globals.leftCounter,
-        rightCounter: globals.rightCounter,
-        roundCounter: globals.roundCounter
-      });
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
-      // เพิ่มเสียงบรรยาย
-      if (window.voiceFeedbackEnabled) {
-        import('./exercise-tracker.js').then(module => {
-          module.exerciseTracker.speakFeedback(`นับขาซ้าย ${globals.leftCounter} ครั้ง`);
-        });
-      }
-      
-      // ตรวจสอบการทำครบรอบ
-      checkRoundCompletion();
-    } else {
-      // ไม่ได้ค้างครบเวลา ให้วางขาลงแล้วเริ่มใหม่
-      globals.isLeftExtended = false;
-      globals.isLeftHolding = false;
-      globals.leftHoldStartTime = 0;
-      globals.leftHoldNotified = false;
-      leftCorrectAngleStartTime = 0;
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
-      globals.statusElement.textContent = `วางขาซ้ายเร็วเกินไป ต้องค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
-      globals.statusElement.style.color = "#FF5252";
-    }
-  }
+        globals.isLeftExtended = false;
+        globals.leftHoldStartTime = 0;
+        leftCorrectAngleStartTime = 0;
 
-  // *** ตรวจจับขาขวา - เพิ่มการตรวจสอบลำตัวตรงเช่นเดียวกัน ***
-  if (isRightAngleCorrect && !globals.isRightExtended && timeSinceLastCount > globals.autoCooldown) {
-    // *** เพิ่มเงื่อนไขตรวจสอบลำตัวตรง ***
-    if (!isBodyStraight) {
-      // แจ้งเตือนเรื่องลำตัวเอียง
-      const currentTime = Date.now();
-      if (!bodyTiltWarningShown || (currentTime - lastBodyTiltWarningTime > BODY_TILT_WARNING_COOLDOWN)) {
-        globals.statusElement.textContent = `${bodyCheck.reason} กรุณายืนให้ลำตัวตรง`;
-        globals.statusElement.style.color = "#FF5252";
-        
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
         if (window.voiceFeedbackEnabled) {
           import('./exercise-tracker.js').then(module => {
             module.exerciseTracker.speakFeedback("ลำตัวเอียงเกินไป");
           });
         }
-        bodyTiltWarningShown = true;
-        lastBodyTiltWarningTime = currentTime;
+        return;
       }
-      return; // ไม่นับถ้าลำตัวเอียง
-    }
-    
-    // ตรวจสอบว่าเข่าตรงหรือไม่
-    if (!isRightLegStraight) {
-      // แจ้งเตือนเรื่องการงอเข่า
-      if (!rightKneeBendWarningShown) {
-        globals.statusElement.textContent = "เข่าขวางอเกินไป ควรเหยียดเข่าให้ตรง";
+
+      // ตรวจสอบว่าเข่ายังตรงอยู่หรือไม่
+      if (!isLeftLegStraight) {
+        // แจ้งเตือนเรื่องการงอเข่าระหว่างค้าง
+        globals.statusElement.textContent = "เข่าซ้ายงอเกินไป การนับเวลาถูกยกเลิก";
         globals.statusElement.style.color = "#FF5252";
-        
+
+        // ยกเลิกการนับเวลา
+        globals.isLeftHolding = false;
+        globals.isLeftExtended = false;
+        globals.leftHoldStartTime = 0;
+        leftCorrectAngleStartTime = 0;
+
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
         if (window.voiceFeedbackEnabled) {
           import('./exercise-tracker.js').then(module => {
-            module.exerciseTracker.speakFeedback("เข่าขวางอเกินไป ควรเหยียดเข่าให้ตรง");
+            module.exerciseTracker.speakFeedback("เข่าซ้ายงอเกินไป การนับเวลาถูกยกเลิก");
           });
         }
-        rightKneeBendWarningShown = true;
+        return;
       }
-      return; // ไม่นับถ้าเข่างอ
-    }
-    
-    // รีเซ็ตตัวแปรแจ้งเตือน
-    rightKneeBendWarningShown = false;
-    bodyTiltWarningShown = false;
-    
-    // ผู้ใช้เริ่มยกขาขวาในมุมที่ถูกต้อง เข่าตรง และลำตัวตรง
-    utils.debugLog("เริ่มยกขาขวาในมุมที่ถูกต้อง");
-    globals.isRightExtended = true;
-    globals.isRightHolding = true;
-    globals.rightHoldStartTime = now;
-    rightCorrectAngleStartTime = now;
-    
-    globals.statusElement.textContent = `กำลังยกขาขวา (${smoothedRightAngle.toFixed(1)}°) ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
-    globals.statusElement.style.color = "#FFA000";
-    
-    if (window.voiceFeedbackEnabled) {
-      import('./exercise-tracker.js').then(module => {
-        module.exerciseTracker.speakFeedback(`ยกขาขวา มุม ${Math.round(smoothedRightAngle)} องศา ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`);
-      });
-    }
-  } 
-  // ตรวจสอบขาขวาที่กำลังค้าง
-  else if (globals.isRightExtended && globals.isRightHolding) {
-    // *** เพิ่มการตรวจสอบลำตัวตรงระหว่างค้าง ***
-    if (!isBodyStraight) {
-      // แจ้งเตือนเรื่องลำตัวเอียงระหว่างค้าง
-      globals.statusElement.textContent = `${bodyCheck.reason} การนับเวลาถูกยกเลิก`;
-      globals.statusElement.style.color = "#FF5252";
-      
-      // ยกเลิกการนับเวลา
-      globals.isRightHolding = false;
-      globals.isRightExtended = false;
-      globals.rightHoldStartTime = 0;
-      rightCorrectAngleStartTime = 0;
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
-      if (window.voiceFeedbackEnabled) {
-        import('./exercise-tracker.js').then(module => {
-          module.exerciseTracker.speakFeedback("ลำตัวเอียงเกินไป");
-        });
-      }
-      return;
-    }
-    
-    // ตรวจสอบว่าเข่ายังตรงอยู่หรือไม่
-    if (!isRightLegStraight) {
-      // แจ้งเตือนเรื่องการงอเข่าระหว่างค้าง
-      globals.statusElement.textContent = "เข่าขวางอเกินไป การนับเวลาถูกยกเลิก";
-      globals.statusElement.style.color = "#FF5252";
-      
-      // ยกเลิกการนับเวลา
-      globals.isRightHolding = false;
-      globals.isRightExtended = false;
-      globals.rightHoldStartTime = 0;
-      rightCorrectAngleStartTime = 0;
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
-      if (window.voiceFeedbackEnabled) {
-        import('./exercise-tracker.js').then(module => {
-          module.exerciseTracker.speakFeedback("เข่าขวางอเกินไป การนับเวลาถูกยกเลิก");
-        });
-      }
-      return;
-    }
-    
-    // ตรวจสอบมุมที่กำลังค้าง
-    if (isRightAngleCorrect) {
-      // หากมุมถูกต้อง ให้นับเวลาการค้าง
-      if (rightCorrectAngleStartTime === 0) {
-        // ถ้าเพิ่งกลับมาอยู่ในมุมที่ถูกต้อง ให้เริ่มนับเวลาใหม่
-        rightCorrectAngleStartTime = now;
-      }
-      
-      // คำนวณเวลาค้างที่มุมถูกต้อง
-      rightLegHoldTime = (now - rightCorrectAngleStartTime) / 1000;
-      
-      // อัปเดตตัวแสดงเวลาค้างขาขนาดใหญ่
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(rightLegHoldTime, REQUIRED_HOLD_TIME, true, false, true);
-      }
-      
-      // ตรวจสอบว่าค้างครบเวลาหรือไม่
-      if (rightLegHoldTime >= REQUIRED_HOLD_TIME) {
-        // ค้างครบเวลาแล้ว
-        globals.isRightHolding = false;
-        
-        // อัปเดตตัวแสดงเวลา (ครบเวลาแล้ว)
-        if (angleDisplayCreated) {
-          AngleDisplay.updateHoldTimer(REQUIRED_HOLD_TIME, REQUIRED_HOLD_TIME, false, true, true);
-        }
-        
-        globals.statusElement.textContent = `ค้างขาขวาครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`;
-        globals.statusElement.style.color = "#4CAF50";
-        
-        if (!globals.rightHoldNotified && window.voiceFeedbackEnabled) {
-          globals.rightHoldNotified = true;
-          import('./exercise-tracker.js').then(module => {
-            module.exerciseTracker.speakFeedback(`ค้างขาขวาครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`);
-          });
-        }
-      } else {
-        // กำลังค้าง แต่ยังไม่ครบเวลา
-        globals.statusElement.textContent = `กำลังค้างขาขวา ${rightLegHoldTime.toFixed(1)}/${REQUIRED_HOLD_TIME} วินาที (มุม ${smoothedRightAngle.toFixed(1)}°)`;
-        globals.statusElement.style.color = "#FFA000";
-      }
-    } else {
-      // มุมไม่ถูกต้อง แต่ยังกำลังค้างขาอยู่
-      rightCorrectAngleStartTime = 0;
-      
-      // อัปเดตตัวแสดงเวลาค้างขา โดยใช้เวลาเดิม แต่กำหนด isAngleCorrect = false
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(rightLegHoldTime, REQUIRED_HOLD_TIME, true, false, false);
-      }
-      
-      // แสดงข้อความแนะนำให้ปรับมุม
-      const angleStatus = getAngleStatus(smoothedRightAngle);
-      let statusMessage = "";
-      
-      if (angleStatus === 'low') {
-        statusMessage = `มุมขาขวาต่ำเกินไป (${smoothedRightAngle.toFixed(1)}°) ควรยกให้สูงขึ้น`;
-      } else {
-        statusMessage = `มุมขาขวาสูงเกินไป (${smoothedRightAngle.toFixed(1)}°) ควรลดมุมลง`;
-      }
-      
-      globals.statusElement.textContent = statusMessage;
-      globals.statusElement.style.color = "#FF5252";
-    }
-  }
-  // ตรวจสอบการวางขาขวากลับที่เดิม (หลังจากค้างครบเวลา)
-  else if (!isRightAngleCorrect && globals.isRightExtended) {
-    // ผู้ใช้วางขาลงแล้ว (มุมไม่อยู่ในช่วง 30-45 องศา)
-    
-    // ตรวจสอบว่าได้ค้างขาครบเวลาหรือไม่
-    if (globals.rightHoldStartTime > 0 && !globals.isRightHolding) {
-      // นับการออกกำลังกาย 1 ครั้ง
-      utils.debugLog("นับการยกขาขวา 1 ครั้ง");
-      
-      globals.rightCounter++;
-      globals.lastCountTime = now;
-      globals.isRightExtended = false;
-      globals.rightHoldStartTime = 0;
-      globals.rightHoldNotified = false;
-      rightCorrectAngleStartTime = 0;
-      
-      // แสดงผลการนับ
-      globals.statusElement.textContent = `นับขาขวา ${globals.rightCounter}/${globals.targetReps} ครั้ง!`;
-      globals.statusElement.style.color = "#4CAF50";
-      
-      // แสดงเอฟเฟกต์การนับ
-      utils.showCountEffect(false);
-      
-      // อัปเดตตัวนับ
-      EventSystem.updateCounter({
-        leftCounter: globals.leftCounter,
-        rightCounter: globals.rightCounter,
-        roundCounter: globals.roundCounter
-      });
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
-      // เพิ่มเสียงบรรยาย
-      if (window.voiceFeedbackEnabled) {
-        import('./exercise-tracker.js').then(module => {
-          module.exerciseTracker.speakFeedback(`นับขาขวา ${globals.rightCounter} ครั้ง`);
-        });
-      }
-      
-      // ตรวจสอบการทำครบรอบ
-      checkRoundCompletion();
-    } else {
-      // ไม่ได้ค้างครบเวลา ให้วางขาลงแล้วเริ่มใหม่
-      globals.isRightExtended = false;
-      globals.isRightHolding = false;
-      globals.rightHoldStartTime = 0;
-      globals.rightHoldNotified = false;
-      rightCorrectAngleStartTime = 0;
-      
-      // รีเซ็ตตัวแสดงเวลาค้างขา
-      if (angleDisplayCreated) {
-        AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-      }
-      
-      globals.statusElement.textContent = `วางขาขวาเร็วเกินไป ต้องค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
-      globals.statusElement.style.color = "#FF5252";
-    }
-  }
-}
 
-try {
-  globals.canvasCtx.restore();
-} catch (error) {
-  utils.debugLog("เกิดข้อผิดพลาดใน canvasCtx.restore():", error);
-}
+      // ตรวจสอบมุมที่กำลังค้าง
+      if (isLeftAngleCorrect) {
+        // หากมุมถูกต้อง ให้นับเวลาการค้าง
+        if (leftCorrectAngleStartTime === 0) {
+          // ถ้าเพิ่งกลับมาอยู่ในมุมที่ถูกต้อง ให้เริ่มนับเวลาใหม่
+          leftCorrectAngleStartTime = now;
+        }
+
+        // คำนวณเวลาค้างที่มุมถูกต้อง
+        leftLegHoldTime = (now - leftCorrectAngleStartTime) / 1000;
+
+        // อัปเดตตัวแสดงเวลาค้างขาขนาดใหญ่
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(leftLegHoldTime, REQUIRED_HOLD_TIME, true, false, true);
+        }
+
+        // ตรวจสอบว่าค้างครบเวลาหรือไม่
+        if (leftLegHoldTime >= REQUIRED_HOLD_TIME) {
+          // ค้างครบเวลาแล้ว
+          globals.isLeftHolding = false;
+
+          // อัปเดตตัวแสดงเวลา (ครบเวลาแล้ว)
+          if (angleDisplayCreated) {
+            AngleDisplay.updateHoldTimer(REQUIRED_HOLD_TIME, REQUIRED_HOLD_TIME, false, true, true);
+          }
+
+          globals.statusElement.textContent = `ค้างขาซ้ายครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`;
+          globals.statusElement.style.color = "#4CAF50";
+
+          if (!globals.leftHoldNotified && window.voiceFeedbackEnabled) {
+            globals.leftHoldNotified = true;
+            import('./exercise-tracker.js').then(module => {
+              module.exerciseTracker.speakFeedback(`ค้างขาซ้ายครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`);
+            });
+          }
+        } else {
+          // กำลังค้าง แต่ยังไม่ครบเวลา
+          globals.statusElement.textContent = `กำลังค้างขาซ้าย ${leftLegHoldTime.toFixed(1)}/${REQUIRED_HOLD_TIME} วินาที (มุม ${smoothedLeftAngle.toFixed(1)}°)`;
+          globals.statusElement.style.color = "#FFA000";
+        }
+      } else {
+        // มุมไม่ถูกต้อง แต่ยังกำลังค้างขาอยู่
+        leftCorrectAngleStartTime = 0;
+
+        // อัปเดตตัวแสดงเวลาค้างขา โดยใช้เวลาเดิม แต่กำหนด isAngleCorrect = false
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(leftLegHoldTime, REQUIRED_HOLD_TIME, true, false, false);
+        }
+
+        // แสดงข้อความแนะนำให้ปรับมุม
+        const angleStatus = getAngleStatus(smoothedLeftAngle);
+        let statusMessage = "";
+
+        if (angleStatus === 'low') {
+          statusMessage = `มุมขาซ้ายต่ำเกินไป (${smoothedLeftAngle.toFixed(1)}°) ควรยกให้สูงขึ้น`;
+        } else {
+          statusMessage = `มุมขาซ้ายสูงเกินไป (${smoothedLeftAngle.toFixed(1)}°) ควรลดมุมลง`;
+        }
+
+        globals.statusElement.textContent = statusMessage;
+        globals.statusElement.style.color = "#FF5252";
+      }
+    }
+    // ตรวจสอบการวางขาซ้ายกลับที่เดิม (หลังจากค้างครบเวลา)
+    else if (!isLeftAngleCorrect && globals.isLeftExtended) {
+      // ผู้ใช้วางขาลงแล้ว (มุมไม่อยู่ในช่วง 30-45 องศา)
+
+      // ตรวจสอบว่าได้ค้างขาครบเวลาหรือไม่
+      if (globals.leftHoldStartTime > 0 && !globals.isLeftHolding) {
+        // นับการออกกำลังกาย 1 ครั้ง
+        utils.debugLog("นับการยกขาซ้าย 1 ครั้ง");
+
+        globals.setLeftCounter(globals.leftCounter + 1);
+        globals.lastCountTime = now;
+        globals.isLeftExtended = false;
+        globals.leftHoldStartTime = 0;
+        globals.leftHoldNotified = false;
+        leftCorrectAngleStartTime = 0;
+
+        // แสดงผลการนับ
+        globals.statusElement.textContent = `นับขาซ้าย ${globals.leftCounter}/${globals.targetReps} ครั้ง!`;
+        globals.statusElement.style.color = "#4CAF50";
+
+        // แสดงเอฟเฟกต์การนับ
+        utils.showCountEffect(true);
+
+        // อัปเดตตัวนับ
+        EventSystem.updateCounter({
+          leftCounter: globals.leftCounter,
+          rightCounter: globals.rightCounter,
+          roundCounter: globals.roundCounter
+        });
+
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
+        // เพิ่มเสียงบรรยาย
+        if (window.voiceFeedbackEnabled) {
+          import('./exercise-tracker.js').then(module => {
+            module.exerciseTracker.speakFeedback(`นับขาซ้าย ${globals.leftCounter} ครั้ง`);
+          });
+        }
+
+        // ตรวจสอบการทำครบรอบ
+        checkRoundCompletion();
+      } else {
+        // ไม่ได้ค้างครบเวลา ให้วางขาลงแล้วเริ่มใหม่
+        globals.isLeftExtended = false;
+        globals.isLeftHolding = false;
+        globals.leftHoldStartTime = 0;
+        globals.leftHoldNotified = false;
+        leftCorrectAngleStartTime = 0;
+
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
+        globals.statusElement.textContent = `วางขาซ้ายเร็วเกินไป ต้องค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
+        globals.statusElement.style.color = "#FF5252";
+      }
+    }
+
+    // *** ตรวจจับขาขวา - เพิ่มการตรวจสอบลำตัวตรงเช่นเดียวกัน ***
+    if (isRightAngleCorrect && !globals.isRightExtended && timeSinceLastCount > globals.autoCooldown) {
+      // *** เพิ่มเงื่อนไขตรวจสอบลำตัวตรง ***
+      if (!isBodyStraight) {
+        // แจ้งเตือนเรื่องลำตัวเอียง
+        const currentTime = Date.now();
+        if (!bodyTiltWarningShown || (currentTime - lastBodyTiltWarningTime > BODY_TILT_WARNING_COOLDOWN)) {
+          globals.statusElement.textContent = `${bodyCheck.reason} กรุณายืนให้ลำตัวตรง`;
+          globals.statusElement.style.color = "#FF5252";
+
+          if (window.voiceFeedbackEnabled) {
+            import('./exercise-tracker.js').then(module => {
+              module.exerciseTracker.speakFeedback("ลำตัวเอียงเกินไป");
+            });
+          }
+          bodyTiltWarningShown = true;
+          lastBodyTiltWarningTime = currentTime;
+        }
+        return; // ไม่นับถ้าลำตัวเอียง
+      }
+
+      // ตรวจสอบว่าเข่าตรงหรือไม่
+      if (!isRightLegStraight) {
+        // แจ้งเตือนเรื่องการงอเข่า
+        if (!rightKneeBendWarningShown) {
+          globals.statusElement.textContent = "เข่าขวางอเกินไป ควรเหยียดเข่าให้ตรง";
+          globals.statusElement.style.color = "#FF5252";
+
+          if (window.voiceFeedbackEnabled) {
+            import('./exercise-tracker.js').then(module => {
+              module.exerciseTracker.speakFeedback("เข่าขวางอเกินไป ควรเหยียดเข่าให้ตรง");
+            });
+          }
+          rightKneeBendWarningShown = true;
+        }
+        return; // ไม่นับถ้าเข่างอ
+      }
+
+      // รีเซ็ตตัวแปรแจ้งเตือน
+      rightKneeBendWarningShown = false;
+      bodyTiltWarningShown = false;
+
+      // ผู้ใช้เริ่มยกขาขวาในมุมที่ถูกต้อง เข่าตรง และลำตัวตรง
+      utils.debugLog("เริ่มยกขาขวาในมุมที่ถูกต้อง");
+      globals.isRightExtended = true;
+      globals.isRightHolding = true;
+      globals.rightHoldStartTime = now;
+      rightCorrectAngleStartTime = now;
+
+      globals.statusElement.textContent = `กำลังยกขาขวา (${smoothedRightAngle.toFixed(1)}°) ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
+      globals.statusElement.style.color = "#FFA000";
+
+      if (window.voiceFeedbackEnabled) {
+        import('./exercise-tracker.js').then(module => {
+          module.exerciseTracker.speakFeedback(`ยกขาขวา มุม ${Math.round(smoothedRightAngle)} องศา ค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`);
+        });
+      }
+    }
+    // ตรวจสอบขาขวาที่กำลังค้าง
+    else if (globals.isRightExtended && globals.isRightHolding) {
+      // *** เพิ่มการตรวจสอบลำตัวตรงระหว่างค้าง ***
+      if (!isBodyStraight) {
+        // แจ้งเตือนเรื่องลำตัวเอียงระหว่างค้าง
+        globals.statusElement.textContent = `${bodyCheck.reason} การนับเวลาถูกยกเลิก`;
+        globals.statusElement.style.color = "#FF5252";
+
+        // ยกเลิกการนับเวลา
+        globals.isRightHolding = false;
+        globals.isRightExtended = false;
+        globals.rightHoldStartTime = 0;
+        rightCorrectAngleStartTime = 0;
+
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
+        if (window.voiceFeedbackEnabled) {
+          import('./exercise-tracker.js').then(module => {
+            module.exerciseTracker.speakFeedback("ลำตัวเอียงเกินไป");
+          });
+        }
+        return;
+      }
+
+      // ตรวจสอบว่าเข่ายังตรงอยู่หรือไม่
+      if (!isRightLegStraight) {
+        // แจ้งเตือนเรื่องการงอเข่าระหว่างค้าง
+        globals.statusElement.textContent = "เข่าขวางอเกินไป การนับเวลาถูกยกเลิก";
+        globals.statusElement.style.color = "#FF5252";
+
+        // ยกเลิกการนับเวลา
+        globals.isRightHolding = false;
+        globals.isRightExtended = false;
+        globals.rightHoldStartTime = 0;
+        rightCorrectAngleStartTime = 0;
+
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
+        if (window.voiceFeedbackEnabled) {
+          import('./exercise-tracker.js').then(module => {
+            module.exerciseTracker.speakFeedback("เข่าขวางอเกินไป การนับเวลาถูกยกเลิก");
+          });
+        }
+        return;
+      }
+
+      // ตรวจสอบมุมที่กำลังค้าง
+      if (isRightAngleCorrect) {
+        // หากมุมถูกต้อง ให้นับเวลาการค้าง
+        if (rightCorrectAngleStartTime === 0) {
+          // ถ้าเพิ่งกลับมาอยู่ในมุมที่ถูกต้อง ให้เริ่มนับเวลาใหม่
+          rightCorrectAngleStartTime = now;
+        }
+
+        // คำนวณเวลาค้างที่มุมถูกต้อง
+        rightLegHoldTime = (now - rightCorrectAngleStartTime) / 1000;
+
+        // อัปเดตตัวแสดงเวลาค้างขาขนาดใหญ่
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(rightLegHoldTime, REQUIRED_HOLD_TIME, true, false, true);
+        }
+
+        // ตรวจสอบว่าค้างครบเวลาหรือไม่
+        if (rightLegHoldTime >= REQUIRED_HOLD_TIME) {
+          // ค้างครบเวลาแล้ว
+          globals.isRightHolding = false;
+
+          // อัปเดตตัวแสดงเวลา (ครบเวลาแล้ว)
+          if (angleDisplayCreated) {
+            AngleDisplay.updateHoldTimer(REQUIRED_HOLD_TIME, REQUIRED_HOLD_TIME, false, true, true);
+          }
+
+          globals.statusElement.textContent = `ค้างขาขวาครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`;
+          globals.statusElement.style.color = "#4CAF50";
+
+          if (!globals.rightHoldNotified && window.voiceFeedbackEnabled) {
+            globals.rightHoldNotified = true;
+            import('./exercise-tracker.js').then(module => {
+              module.exerciseTracker.speakFeedback(`ค้างขาขวาครบ ${REQUIRED_HOLD_TIME} วินาที แล้ว วางขาลงได้`);
+            });
+          }
+        } else {
+          // กำลังค้าง แต่ยังไม่ครบเวลา
+          globals.statusElement.textContent = `กำลังค้างขาขวา ${rightLegHoldTime.toFixed(1)}/${REQUIRED_HOLD_TIME} วินาที (มุม ${smoothedRightAngle.toFixed(1)}°)`;
+          globals.statusElement.style.color = "#FFA000";
+        }
+      } else {
+        // มุมไม่ถูกต้อง แต่ยังกำลังค้างขาอยู่
+        rightCorrectAngleStartTime = 0;
+
+        // อัปเดตตัวแสดงเวลาค้างขา โดยใช้เวลาเดิม แต่กำหนด isAngleCorrect = false
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(rightLegHoldTime, REQUIRED_HOLD_TIME, true, false, false);
+        }
+
+        // แสดงข้อความแนะนำให้ปรับมุม
+        const angleStatus = getAngleStatus(smoothedRightAngle);
+        let statusMessage = "";
+
+        if (angleStatus === 'low') {
+          statusMessage = `มุมขาขวาต่ำเกินไป (${smoothedRightAngle.toFixed(1)}°) ควรยกให้สูงขึ้น`;
+        } else {
+          statusMessage = `มุมขาขวาสูงเกินไป (${smoothedRightAngle.toFixed(1)}°) ควรลดมุมลง`;
+        }
+
+        globals.statusElement.textContent = statusMessage;
+        globals.statusElement.style.color = "#FF5252";
+      }
+    }
+    // ตรวจสอบการวางขาขวากลับที่เดิม (หลังจากค้างครบเวลา)
+    else if (!isRightAngleCorrect && globals.isRightExtended) {
+      // ผู้ใช้วางขาลงแล้ว (มุมไม่อยู่ในช่วง 30-45 องศา)
+
+      // ตรวจสอบว่าได้ค้างขาครบเวลาหรือไม่
+      if (globals.rightHoldStartTime > 0 && !globals.isRightHolding) {
+        // นับการออกกำลังกาย 1 ครั้ง
+        utils.debugLog("นับการยกขาขวา 1 ครั้ง");
+
+        globals.setRightCounter(globals.rightCounter + 1);
+        globals.lastCountTime = now;
+        globals.isRightExtended = false;
+        globals.rightHoldStartTime = 0;
+        globals.rightHoldNotified = false;
+        rightCorrectAngleStartTime = 0;
+
+        // แสดงผลการนับ
+        globals.statusElement.textContent = `นับขาขวา ${globals.rightCounter}/${globals.targetReps} ครั้ง!`;
+        globals.statusElement.style.color = "#4CAF50";
+
+        // แสดงเอฟเฟกต์การนับ
+        utils.showCountEffect(false);
+
+        // อัปเดตตัวนับ
+        EventSystem.updateCounter({
+          leftCounter: globals.leftCounter,
+          rightCounter: globals.rightCounter,
+          roundCounter: globals.roundCounter
+        });
+
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
+        // เพิ่มเสียงบรรยาย
+        if (window.voiceFeedbackEnabled) {
+          import('./exercise-tracker.js').then(module => {
+            module.exerciseTracker.speakFeedback(`นับขาขวา ${globals.rightCounter} ครั้ง`);
+          });
+        }
+
+        // ตรวจสอบการทำครบรอบ
+        checkRoundCompletion();
+      } else {
+        // ไม่ได้ค้างครบเวลา ให้วางขาลงแล้วเริ่มใหม่
+        globals.isRightExtended = false;
+        globals.isRightHolding = false;
+        globals.rightHoldStartTime = 0;
+        globals.rightHoldNotified = false;
+        rightCorrectAngleStartTime = 0;
+
+        // รีเซ็ตตัวแสดงเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
+        globals.statusElement.textContent = `วางขาขวาเร็วเกินไป ต้องค้างไว้ ${REQUIRED_HOLD_TIME} วินาที`;
+        globals.statusElement.style.color = "#FF5252";
+      }
+    }
+  }
+
+  try {
+    globals.canvasCtx.restore();
+  } catch (error) {
+    utils.debugLog("เกิดข้อผิดพลาดใน canvasCtx.restore():", error);
+  }
 }
 
 /**
 * ตรวจสอบการทำครบรอบ
 */
 function checkRoundCompletion() {
-if (globals.leftCounter >= globals.targetReps && globals.rightCounter >= globals.targetReps) {
-  // เพิ่มตัวนับรอบ
-  globals.roundCounter++;
-   
-   // แสดงผลการทำครบรอบ
-   globals.statusElement.textContent = `ทำครบรอบที่ ${globals.roundCounter} แล้ว! (${globals.leftCounter}/${globals.targetReps} ซ้าย, ${globals.rightCounter}/${globals.targetReps} ขวา)`;
-   globals.statusElement.style.color = "#4CAF50";
-   
-   // บันทึกการออกกำลังกาย
-   EventSystem.roundCompleted(
-     globals.currentExercise,
-     1,
-     globals.leftCounter,
-     globals.rightCounter
-   );
-   
-   // บรรยายผลสำเร็จ
-   if (window.voiceFeedbackEnabled) {
-     import('./exercise-tracker.js').then(module => {
-       module.exerciseTracker.speakFeedback(`ทำครบรอบที่ ${globals.roundCounter} แล้ว! ขาซ้าย ${globals.leftCounter} ครั้ง ขาขวา ${globals.rightCounter} ครั้ง`);
-     }).catch(err => {
-       console.error("ไม่สามารถโหลดโมดูล exercise-tracker:", err);
-     });
-   }
-   
-   // รีเซ็ตตัวนับของแต่ละขา เริ่มรอบใหม่
-   if (globals.autoCountEnabled) {
-     setTimeout(() => {
-       globals.leftCounter = 0;
-       globals.rightCounter = 0;
-       
-       // รีเซ็ตตัวนับเวลาค้างขา
-       if (angleDisplayCreated) {
-         AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
-       }
-       
-       // ส่งอีเวนต์ให้อัปเดตตัวแสดงผล
-       EventSystem.updateCounter({
-         leftCounter: globals.leftCounter,
-         rightCounter: globals.rightCounter,
-         roundCounter: globals.roundCounter
-       });
-       
-       globals.statusElement.textContent = `เริ่มรอบที่ ${globals.roundCounter + 1}`;
-       
-       if (window.voiceFeedbackEnabled) {
-         import('./exercise-tracker.js').then(module => {
-           module.exerciseTracker.speakFeedback(`เริ่มรอบที่ ${globals.roundCounter + 1}`);
-         }).catch(err => {
-           console.error("ไม่สามารถโหลดโมดูล exercise-tracker:", err);
-         });
-       }
-     }, 3000); // รอ 3 วินาทีก่อนเริ่มรอบใหม่
-   }
- }
+  if (globals.leftCounter >= globals.targetReps && globals.rightCounter >= globals.targetReps) {
+    // เพิ่มตัวนับรอบ
+    globals.setRoundCounter(globals.roundCounter + 1);
+
+    // แสดงผลการทำครบรอบ
+    globals.statusElement.textContent = `ทำครบรอบที่ ${globals.roundCounter} แล้ว! (${globals.leftCounter}/${globals.targetReps} ซ้าย, ${globals.rightCounter}/${globals.targetReps} ขวา)`;
+    globals.statusElement.style.color = "#4CAF50";
+
+    // บันทึกการออกกำลังกาย
+    EventSystem.roundCompleted(
+      globals.currentExercise,
+      1,
+      globals.leftCounter,
+      globals.rightCounter
+    );
+
+    // บรรยายผลสำเร็จ
+    if (window.voiceFeedbackEnabled) {
+      import('./exercise-tracker.js').then(module => {
+        module.exerciseTracker.speakFeedback(`ทำครบรอบที่ ${globals.roundCounter} แล้ว! ขาซ้าย ${globals.leftCounter} ครั้ง ขาขวา ${globals.rightCounter} ครั้ง`);
+      }).catch(err => {
+        console.error("ไม่สามารถโหลดโมดูล exercise-tracker:", err);
+      });
+    }
+
+    // รีเซ็ตตัวนับของแต่ละขา เริ่มรอบใหม่
+    if (globals.autoCountEnabled) {
+      setTimeout(() => {
+        globals.setLeftCounter(0);
+        globals.setRightCounter(0);
+
+        // รีเซ็ตตัวนับเวลาค้างขา
+        if (angleDisplayCreated) {
+          AngleDisplay.updateHoldTimer(0, REQUIRED_HOLD_TIME, false, false, false);
+        }
+
+        // ส่งอีเวนต์ให้อัปเดตตัวแสดงผล
+        EventSystem.updateCounter({
+          leftCounter: globals.leftCounter,
+          rightCounter: globals.rightCounter,
+          roundCounter: globals.roundCounter
+        });
+
+        globals.statusElement.textContent = `เริ่มรอบที่ ${globals.roundCounter + 1}`;
+
+        if (window.voiceFeedbackEnabled) {
+          import('./exercise-tracker.js').then(module => {
+            module.exerciseTracker.speakFeedback(`เริ่มรอบที่ ${globals.roundCounter + 1}`);
+          }).catch(err => {
+            console.error("ไม่สามารถโหลดโมดูล exercise-tracker:", err);
+          });
+        }
+      }, 3000); // รอ 3 วินาทีก่อนเริ่มรอบใหม่
+    }
+  }
 }
 
 // รีเซ็ตตัวแปรที่เกี่ยวข้องกับการตรวจจับ
 function resetDetection() {
- // รีเซ็ตตัวแปรการแสดงมุม
- angleDisplayCreated = false;
- 
- // รีเซ็ตตัวแปรการค้างขา
- leftLegHoldTime = 0;
- rightLegHoldTime = 0;
- leftCorrectAngleStartTime = 0;
- rightCorrectAngleStartTime = 0;
- 
- // รีเซ็ตตัวแปรแจ้งเตือน
- leftKneeBendWarningShown = false;
- rightKneeBendWarningShown = false;
- 
- // *** รีเซ็ตตัวแปรลำตัวเอียง ***
- bodyTiltWarningShown = false;
- lastBodyTiltWarningTime = 0;
- 
- // รีเซ็ตตัวแปรการ smoothing
- previousLeftLegData = null;
- previousRightLegData = null;
- 
- // รีเซ็ตสถานะการแสดงผลมุม
- angleArcDisplayed = false;
+  // รีเซ็ตตัวแปรการแสดงมุม
+  angleDisplayCreated = false;
+
+  // รีเซ็ตตัวแปรการค้างขา
+  leftLegHoldTime = 0;
+  rightLegHoldTime = 0;
+  leftCorrectAngleStartTime = 0;
+  rightCorrectAngleStartTime = 0;
+
+  // รีเซ็ตตัวแปรแจ้งเตือน
+  leftKneeBendWarningShown = false;
+  rightKneeBendWarningShown = false;
+
+  // *** รีเซ็ตตัวแปรลำตัวเอียง ***
+  bodyTiltWarningShown = false;
+  lastBodyTiltWarningTime = 0;
+
+  // รีเซ็ตตัวแปรการ smoothing
+  previousLeftLegData = null;
+  previousRightLegData = null;
+
+  // รีเซ็ตสถานะการแสดงผลมุม
+  angleArcDisplayed = false;
 }
 
-export { 
- detectSideLegRaiseExercise, 
- improvedDetectSideLegRaiseExercise,
- checkRoundCompletion,
- resetDetection,
- // *** เพิ่มฟังก์ชันใหม่ ***
- checkBodyStraightness,
- calculateBodyTilt,
- drawBodyTiltIndicator
+export {
+  detectSideLegRaiseExercise,
+  improvedDetectSideLegRaiseExercise,
+  checkRoundCompletion,
+  resetDetection,
+  // *** เพิ่มฟังก์ชันใหม่ ***
+  checkBodyStraightness,
+  calculateBodyTilt,
+  drawBodyTiltIndicator
 };

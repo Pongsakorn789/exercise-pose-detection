@@ -166,6 +166,9 @@ export const globals = {
   }
 };
 
+// Expose globals to window for access from non-module scripts
+window.exerciseGlobals = globals;
+
 
 
 // ฟังก์ชันดีบัก
@@ -333,21 +336,43 @@ const createPoseLandmarker = async () => {
     const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
     debugLog("โหลด vision module สำเร็จ:", vision);
 
-    poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-        delegate: "GPU"
-      },
-      runningMode: runningMode,
-      numPoses: 1,
-      // ปรับค่า confidence ให้ต่ำลงเพื่อให้ตรวจจับได้ง่ายขึ้น
-      minPoseDetectionConfidence: 0.1, // ลดลงเหลือ 0.1
-      minPosePresenceConfidence: 0.1, // ลดลงเหลือ 0.1
-      minTrackingConfidence: 0.1 // ลดลงเหลือ 0.1
-    });
+    try {
+      // ลองใช้ GPU ก่อน
+      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+          delegate: "GPU"
+        },
+        runningMode: runningMode,
+        numPoses: 1,
+        // ปรับค่า confidence ให้ต่ำลงเพื่อให้ตรวจจับได้ง่ายขึ้น
+        minPoseDetectionConfidence: 0.1, // ลดลงเหลือ 0.1
+        minPosePresenceConfidence: 0.1, // ลดลงเหลือ 0.1
+        minTrackingConfidence: 0.1 // ลดลงเหลือ 0.1
+      });
+      debugLog("สร้าง PoseLandmarker (GPU) สำเร็จ");
+    } catch (gpuError) {
+      console.warn("ไม่สามารถโหลดโมเดลด้วย GPU ได้ กำลังลองใช้ CPU...", gpuError);
+
+      // ถ้าล้มเหลว ให้ลองใช้ CPU
+      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+          delegate: "CPU"
+        },
+        runningMode: runningMode,
+        numPoses: 1,
+        minPoseDetectionConfidence: 0.1,
+        minPosePresenceConfidence: 0.1,
+        minTrackingConfidence: 0.1
+      });
+      debugLog("สร้าง PoseLandmarker (CPU) สำเร็จ");
+    }
 
     debugLog("สร้าง PoseLandmarker สำเร็จ:", poseLandmarker);
-    demosSection.classList.remove("invisible");
+    if (demosSection) {
+      demosSection.classList.remove("invisible");
+    }
     debugLog("โมเดลถูกโหลดสำเร็จ");
 
     // Create the counter display when the model is loaded
@@ -356,7 +381,8 @@ const createPoseLandmarker = async () => {
     return true;
   } catch (error) {
     console.error("เกิดข้อผิดพลาดในการโหลดโมเดล:", error);
-    alert("เกิดข้อผิดพลาดในการโหลดโมเดล กรุณารีเฟรชหน้าเว็บ");
+    // แสดงข้อความ error ที่ชัดเจนขึ้น
+    alert(`เกิดข้อผิดพลาดในการโหลดโมเดล: ${error.message || error}\nกรุณารีเฟรชหน้าเว็บ`);
     return false;
   }
 };
@@ -608,95 +634,99 @@ async function improvedPredictWebcam() {
 
     // ตรวจจับท่าทาง
     poseLandmarker.detectForVideo(video, startTimeMs, (result) => {
-      debugLog("ได้รับผลลัพธ์จาก detectForVideo");
+      try {
+        debugLog("ได้รับผลลัพธ์จาก detectForVideo");
 
-      canvasCtx.save();
-      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-      // ตรวจสอบผลลัพธ์
-      if (result.landmarks && result.landmarks.length > 0) {
-        debugLog("ตรวจพบ landmarks จำนวน:", result.landmarks[0].length);
+        // ตรวจสอบผลลัพธ์
+        if (result.landmarks && result.landmarks.length > 0) {
+          debugLog("ตรวจพบ landmarks จำนวน:", result.landmarks[0].length);
 
-        // ทำ smoothing เพื่อลดการกระโดดของจุด landmarks
-        const landmarks = utils.smoothLandmarks(result.landmarks[0], previousLandmarks);
+          // ทำ smoothing เพื่อลดการกระโดดของจุด landmarks
+          const landmarks = utils.smoothLandmarks(result.landmarks[0], previousLandmarks);
 
-        // เก็บค่า landmarks ปัจจุบันสำหรับการ smooth ในครั้งถัดไป
-        lastDetectedLandmarks = JSON.parse(JSON.stringify(landmarks));
+          // เก็บค่า landmarks ปัจจุบันสำหรับการ smooth ในครั้งถัดไป
+          lastDetectedLandmarks = JSON.parse(JSON.stringify(landmarks));
 
-        // ตรวจสอบว่าเห็นร่างกายทั้งตัวหรือไม่
-        fullBodyVisible = utils.improvedIsFullBodyVisible(landmarks, currentExercise);
-        window.fullBodyVisible = fullBodyVisible; // บันทึกค่าใน window เพื่อให้เข้าถึงได้จากทุกที่
+          // ตรวจสอบว่าเห็นร่างกายทั้งตัวหรือไม่
+          fullBodyVisible = utils.improvedIsFullBodyVisible(landmarks, currentExercise);
+          window.fullBodyVisible = fullBodyVisible; // บันทึกค่าใน window เพื่อให้เข้าถึงได้จากทุกที่
 
-        debugLog(`สถานะการตรวจจับร่างกาย: ${fullBodyVisible ? 'เห็นทั้งตัว' : 'ไม่เห็นทั้งตัว'}`);
+          debugLog(`สถานะการตรวจจับร่างกาย: ${fullBodyVisible ? 'เห็นทั้งตัว' : 'ไม่เห็นทั้งตัว'}`);
 
-        // วาดจุด landmarks และเส้นเชื่อมต่อด้วยสีที่แตกต่างกันตามการมองเห็น
-        drawingUtils.drawLandmarks(landmarks, {
-          radius: 5,
-          color: fullBodyVisible ? '#00FF00' : '#FFA500',
-          fillColor: fullBodyVisible ? '#00FF00' : '#FFA500'
-        });
+          // วาดจุด landmarks และเส้นเชื่อมต่อด้วยสีที่แตกต่างกันตามการมองเห็น
+          drawingUtils.drawLandmarks(landmarks, {
+            radius: 5,
+            color: fullBodyVisible ? '#00FF00' : '#FFA500',
+            fillColor: fullBodyVisible ? '#00FF00' : '#FFA500'
+          });
 
-        drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, {
-          color: fullBodyVisible ? '#00FFFF' : '#F9A826',
-          lineWidth: 3
-        });
+          drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, {
+            color: fullBodyVisible ? '#00FFFF' : '#F9A826',
+            lineWidth: 3
+          });
 
-        // อัปเดตตัวบ่งชี้การตรวจจับร่างกาย
-        utils.updateBodyDetectionIndicator(fullBodyVisible);
+          // อัปเดตตัวบ่งชี้การตรวจจับร่างกาย
+          utils.updateBodyDetectionIndicator(fullBodyVisible);
 
-        // แสดงสถานะการตรวจจับบน canvas
-        if (fullBodyVisible) {
-          canvasCtx.fillStyle = "rgba(76, 175, 80, 0.7)";
-          canvasCtx.fillRect(10, 10, 20, 20);
-          canvasCtx.strokeStyle = "#FFFFFF";
-          canvasCtx.strokeRect(10, 10, 20, 20);
-          canvasCtx.fillStyle = "#FFFFFF";
-          canvasCtx.font = "14px Arial";
-          canvasCtx.fillText("เห็นทั้งตัว", 35, 25);
+          // แสดงสถานะการตรวจจับบน canvas
+          if (fullBodyVisible) {
+            canvasCtx.fillStyle = "rgba(76, 175, 80, 0.7)";
+            canvasCtx.fillRect(10, 10, 20, 20);
+            canvasCtx.strokeStyle = "#FFFFFF";
+            canvasCtx.strokeRect(10, 10, 20, 20);
+            canvasCtx.fillStyle = "#FFFFFF";
+            canvasCtx.font = "14px Arial";
+            canvasCtx.fillText("เห็นทั้งตัว", 35, 25);
 
-          // เรียกใช้ฟังก์ชันตรวจจับท่าออกกำลังกาย
-          improvedDetectSideLegRaiseExercise(landmarks);
+            // เรียกใช้ฟังก์ชันตรวจจับท่าออกกำลังกาย
+            improvedDetectSideLegRaiseExercise(landmarks);
 
-          // จัดการการปรับเทียบตำแหน่ง
-          if (!window.calibrated && window.baseSamples && window.baseSamples.length < 30) {
-            statusElement.textContent = `กำลังปรับเทียบตำแหน่ง... (${window.baseSamples.length}/30) กรุณายืนตรง`;
-            statusElement.style.color = "#2196F3";
+            // จัดการการปรับเทียบตำแหน่ง
+            if (!window.calibrated && window.baseSamples && window.baseSamples.length < 30) {
+              statusElement.textContent = `กำลังปรับเทียบตำแหน่ง... (${window.baseSamples.length}/30) กรุณายืนตรง`;
+              statusElement.style.color = "#2196F3";
 
-            // แสดงตัวบ่งชี้การปรับเทียบ
-            utils.showCalibrationIndicator(window.baseSamples.length);
+              // แสดงตัวบ่งชี้การปรับเทียบ
+              utils.showCalibrationIndicator(window.baseSamples.length);
+            }
+          } else {
+            canvasCtx.fillStyle = "rgba(255, 82, 82, 0.7)";
+            canvasCtx.fillRect(10, 10, 20, 20);
+            canvasCtx.strokeStyle = "#FFFFFF";
+            canvasCtx.strokeRect(10, 10, 20, 20);
+            canvasCtx.fillStyle = "#FFFFFF";
+            canvasCtx.font = "14px Arial";
+            canvasCtx.fillText("ไม่เห็นทั้งตัว", 35, 25);
+
+            // แสดงข้อความให้ยืนให้กล้องเห็นทั้งตัว
+            statusElement.textContent = "กรุณายืนให้กล้องเห็นทั้งตัว";
+            statusElement.style.color = "#FF5252";
+
+            // บายพาสการตรวจจับร่างกายทั้งตัวเพื่อทดสอบ
+            debugLog("กำลังเรียกฟังก์ชันวิเคราะห์ท่าทางแม้จะไม่เห็นร่างกายทั้งตัว");
+            improvedDetectSideLegRaiseExercise(landmarks);
+          }
+
+          // ตรวจสอบการบรรลุเป้าหมายและแสดงผลความสำเร็จ
+          checkAchievement();
+
+          // แสดงข้อมูลดีบัก (เฉพาะเมื่อเปิดโหมดดีบัก)
+          if (debugMode) {
+            utils.showDebugInfo(landmarks, currentExercise, canvasElement, canvasCtx, isLeftExtended, isRightExtended);
           }
         } else {
-          canvasCtx.fillStyle = "rgba(255, 82, 82, 0.7)";
-          canvasCtx.fillRect(10, 10, 20, 20);
-          canvasCtx.strokeStyle = "#FFFFFF";
-          canvasCtx.strokeRect(10, 10, 20, 20);
-          canvasCtx.fillStyle = "#FFFFFF";
-          canvasCtx.font = "14px Arial";
-          canvasCtx.fillText("ไม่เห็นทั้งตัว", 35, 25);
-
-          // แสดงข้อความให้ยืนให้กล้องเห็นทั้งตัว
-          statusElement.textContent = "กรุณายืนให้กล้องเห็นทั้งตัว";
-          statusElement.style.color = "#FF5252";
-
-          // บายพาสการตรวจจับร่างกายทั้งตัวเพื่อทดสอบ
-          debugLog("กำลังเรียกฟังก์ชันวิเคราะห์ท่าทางแม้จะไม่เห็นร่างกายทั้งตัว");
-          improvedDetectSideLegRaiseExercise(landmarks);
+          // กรณีไม่พบร่างกาย
+          debugLog("ไม่พบร่างกายในเฟรมนี้");
+          handleNoBodyDetection();
         }
 
-        // ตรวจสอบการบรรลุเป้าหมายและแสดงผลความสำเร็จ
-        checkAchievement();
-
-        // แสดงข้อมูลดีบัก (เฉพาะเมื่อเปิดโหมดดีบัก)
-        if (debugMode) {
-          utils.showDebugInfo(landmarks, currentExercise, canvasElement, canvasCtx, isLeftExtended, isRightExtended);
-        }
-      } else {
-        // กรณีไม่พบร่างกาย
-        debugLog("ไม่พบร่างกายในเฟรมนี้");
-        handleNoBodyDetection();
+        canvasCtx.restore();
+      } catch (innerError) {
+        console.error("เกิดข้อผิดพลาดในการประมวลผลเฟรม:", innerError);
       }
-
-      canvasCtx.restore();
     });
   } catch (error) {
     console.error("เกิดข้อผิดพลาดในการตรวจจับ:", error);

@@ -229,6 +229,9 @@
 
     video,
     canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -565,14 +568,21 @@
         durationSec = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
       }
 
-      const total = leftCounter + rightCounter;
+      // ใช้ค่าจาก window.exerciseGlobals (ถ้ามี) หรือ window object
+      const globals = window.exerciseGlobals || {};
+      const left = globals.leftCounter !== undefined ? globals.leftCounter : (window.leftCounter || 0);
+      const right = globals.rightCounter !== undefined ? globals.rightCounter : (window.rightCounter || 0);
+      const rounds = globals.roundCounter !== undefined ? globals.roundCounter : (window.roundCounter || 0);
+      const total = left + right;
+
+      console.log("บันทึกผล:", { rounds, total, left, right, durationSec });
 
       if (window.flutter_inappwebview) {
         window.flutter_inappwebview.callHandler('saveExerciseData', {
-          rounds: roundCounter,
+          rounds: rounds,
           total: total,
-          left: leftCounter,
-          right: rightCounter,
+          left: left,
+          right: right,
           durationSec: durationSec,
           date: new Date().toISOString()
         });
