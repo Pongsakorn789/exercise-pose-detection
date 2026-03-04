@@ -136,10 +136,41 @@
   </div>
 
   <!-- Achievement Animation -->
-  <div id="achievement-animation">
-    <div id="achievement-text">🎉 เยี่ยมมาก! 🎉</div>
-    <div id="achievement-subtext">คุณทำครบเป้าหมายแล้ว</div>
-    <button id="continue-button">ดำเนินการต่อ</button>
+  <div id="achievement-animation" style="display: none;">
+    <div class="achievement-overlay"></div>
+    <div class="achievement-content">
+      <div class="achievement-icon">✓</div>
+      <h2 class="achievement-title">บันทึกสำเร็จ!</h2>
+      
+      <div class="achievement-info">
+        <div class="info-item">
+          <div class="info-label">จำนวนรอบ</div>
+          <div class="info-value" id="achievement-rounds">1</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">ขาซ้าย</div>
+          <div class="info-value" id="achievement-left">10 ครั้ง</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">ขาขวา</div>
+          <div class="info-value" id="achievement-right">10 ครั้ง</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">รวมทั้งหมด</div>
+          <div class="info-value highlight" id="achievement-total">20 ครั้ง</div>
+        </div>
+      </div>
+      
+      <button id="continue-button" class="action-button primary">
+        <i class="fas fa-play"></i>
+        ดำเนินการต่อ
+      </button>
+      
+      <button id="close-and-reset" class="action-button danger">
+        <i class="fas fa-times"></i>
+        ปิด
+      </button>
+    </div>
   </div>
 
   <!-- JavaScript Files -->
@@ -424,6 +455,54 @@
   </script>
 
 
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const continueBtn = document.getElementById('continue-button');
+    const achievement = document.getElementById('achievement-animation');
+
+    if (!continueBtn || !achievement) return;
+
+    // flag กันค้าง
+    window.isAchievementShown = false;
+
+    continueBtn.addEventListener('click', () => {
+      console.log('✅ กดดำเนินการต่อ');
+
+      // ซ่อนหน้า achievement
+      achievement.style.display = 'none';
+
+      // reset state
+      window.isAchievementShown = false;
+
+      // ให้นับต่อ ถ้ามี pause logic
+      if (typeof window.resumeExercise === 'function') {
+        window.resumeExercise();
+      }
+    });
+  });
+</script>
+
 </body>
 
 </html>
+
+<script>
+// เพิ่มฟังก์ชันสำหรับปุ่มปิดและรีเซ็ต
+document.addEventListener('DOMContentLoaded', () => {
+  const closeBtn = document.getElementById('close-and-reset');
+  const achievement = document.getElementById('achievement-animation');
+
+  if (closeBtn && achievement) {
+    closeBtn.addEventListener('click', () => {
+      console.log('❌ กดปิด');
+      achievement.style.display = 'none';
+      window.isAchievementShown = false;
+      
+      // รีเซ็ตค่าต่างๆ ถ้าต้องการ
+      if (typeof window.resetExercise === 'function') {
+        window.resetExercise();
+      }
+    });
+  }
+});
+</script>

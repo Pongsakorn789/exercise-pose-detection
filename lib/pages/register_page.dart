@@ -1,5 +1,6 @@
+import 'package:firebase_demo/utils/formatters.dart' show ThaiIdInputFormatter;
 import 'package:flutter/services.dart';
-import '../utils/formatters.dart';
+
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,21 @@ class _RegisterPageState extends State<RegisterPage> {
   final idCardCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
+
+  // ⭐ เพิ่ม: เพศ
+  String? gender; // male / female / other
+
+  // ⭐ เพิ่ม: โรคประจำตัว
+  final List<String> chronicOptions = [
+    'ไม่มีโรคประจำตัว',
+    'เบาหวาน',
+    'ความดันโลหิตสูง',
+    'โรคหัวใจ',
+    'โรคไขมันในเลือดสูง',
+    'โรคข้อเข่าเสื่อม',
+    'โรคหลอดเลือดสมอง',
+  ];
+  List<String> selectedChronic = [];
 
   bool acceptPolicy = false;
   bool acceptNews = false;
@@ -75,7 +91,6 @@ class _RegisterPageState extends State<RegisterPage> {
           (now.month == picked.month && now.day < picked.day)) {
         age--;
       }
-
       birthCtrl.text = "${picked.day}/${picked.month}/${picked.year}";
       ageCtrl.text = age.toString();
     }
@@ -119,8 +134,13 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    final cleanId = idCardCtrl.text.replaceAll('-', '').trim();
+    // ⭐ เพิ่ม validation เพศ
+    if (gender == null) {
+      _showError("กรุณาเลือกเพศ");
+      return;
+    }
 
+    final cleanId = idCardCtrl.text.replaceAll('-', '').trim();
     if (cleanId.length != 13) {
       _showError("กรุณากรอกเลขบัตรประชาชน 13 หลัก");
       return;
@@ -161,6 +181,7 @@ class _RegisterPageState extends State<RegisterPage> {
       }
 
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        // 🔹 ของเดิม
         'firstName': firstNameCtrl.text.trim(),
         'lastName': lastNameCtrl.text.trim(),
         'birthDate': birthCtrl.text,
@@ -173,6 +194,11 @@ class _RegisterPageState extends State<RegisterPage> {
         'acceptNews': acceptNews,
         'role': 'elderly',
         'email': "$cleanId@senior.app",
+
+        // ⭐ เพิ่ม
+        'gender': gender,
+        'chronicDiseases': selectedChronic,
+
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -185,34 +211,8 @@ class _RegisterPageState extends State<RegisterPage> {
         );
         Navigator.pop(context);
       }
-    } on FirebaseAuthException catch (e) {
+    } finally {
       setState(() => isLoading = false);
-      if (!mounted) return;
-
-      String message = 'สมัครสมาชิกไม่สำเร็จ';
-
-      switch (e.code) {
-        case 'email-already-in-use':
-          message = 'เลขบัตรประชาชนนี้ถูกใช้งานแล้ว';
-          break;
-        case 'invalid-email':
-          message = 'รูปแบบข้อมูลไม่ถูกต้อง';
-          break;
-        case 'weak-password':
-          message = 'รหัสผ่านไม่ปลอดภัยเพียงพอ';
-          break;
-        case 'network-request-failed':
-          message = 'ไม่สามารถเชื่อมต่ออินเทอร์เน็ตได้';
-          break;
-        default:
-          message = 'เกิดข้อผิดพลาด: ${e.message}';
-      }
-
-      _showError(message);
-    } catch (e) {
-      setState(() => isLoading = false);
-      if (!mounted) return;
-      _showError('เกิดข้อผิดพลาดที่ไม่คาดคิด: ${e.toString()}');
     }
   }
 
@@ -244,6 +244,7 @@ class _RegisterPageState extends State<RegisterPage> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            /// 👤 ข้อมูลส่วนตัว
             _buildSectionContainer(
               title: "ข้อมูลส่วนตัว",
               icon: Icons.person_rounded,
@@ -260,6 +261,24 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.text_fields_rounded,
                 ),
                 const SizedBox(height: 12),
+
+                // ⭐ เพศ
+                const Text(
+                  "เพศ",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimaryColor,
+                  ),
+                ),
+                Row(
+                  children: [
+                    _genderRadio("ชาย", "male"),
+                    _genderRadio("หญิง", "female"),
+                    _genderRadio("อื่น ๆ", "other"),
+                  ],
+                ),
+
                 GestureDetector(
                   onTap: pickBirthDate,
                   child: AbsorbPointer(
@@ -279,9 +298,42 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ],
             ),
+            
 
             const SizedBox(height: 24),
 
+            /// ⚠️ โรคประจำตัว
+            _buildSectionContainer(
+              title: "โรคประจำตัว",
+              icon: Icons.warning_rounded,
+              children: chronicOptions
+                  .map(
+                    (disease) => CheckboxListTile(
+                      value: selectedChronic.contains(disease),
+                      title: Text(disease),
+                      activeColor: primaryGreen,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      onChanged: (checked) {
+                        setState(() {
+                          if (disease == 'ไม่มีโรคประจำตัว') {
+                            selectedChronic =
+                                checked == true ? [disease] : [];
+                          } else {
+                            selectedChronic.remove('ไม่มีโรคประจำตัว');
+                            checked == true
+                                ? selectedChronic.add(disease)
+                                : selectedChronic.remove(disease);
+                          }
+                        });
+                      },
+                    ),
+                  )
+                  .toList(),
+            ),
+
+            const SizedBox(height: 24),
+
+            /// ❤️ ข้อมูลสุขภาพ (ของเดิม)
             _buildSectionContainer(
               title: "ข้อมูลสุขภาพ",
               icon: Icons.favorite_rounded,
@@ -312,14 +364,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: calculateBMI,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryGreen,
-                      side: const BorderSide(color: primaryGreen),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
                     icon: const Icon(Icons.calculate_rounded),
                     label: const Text("คำนวณ BMI"),
                   ),
@@ -336,6 +380,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
             const SizedBox(height: 24),
 
+            /// 🔐 บัญชีผู้ใช้ (ของเดิม)
             _buildSectionContainer(
               title: "ข้อมูลบัญชีผู้ใช้",
               icon: Icons.lock_outline_rounded,
@@ -434,90 +479,14 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildSectionContainer({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: primaryGreen, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: textPrimaryColor,
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 24, color: Colors.grey),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscure = false,
-    bool enabled = true,
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-    TextInputAction? textInputAction,
-    Function(String)? onSubmitted,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      enabled: enabled,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      textInputAction: textInputAction,
-      onSubmitted: onSubmitted,
-      style: const TextStyle(fontSize: 16, color: textPrimaryColor),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.grey[600]),
-        prefixIcon: Icon(icon, color: enabled ? primaryGreen : Colors.grey),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryGreen, width: 2),
-        ),
-        filled: true,
-        fillColor: enabled ? const Color(0xFFF9FAFB) : Colors.grey[100],
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 16,
-          horizontal: 16,
-        ),
+  Widget _genderRadio(String label, String value) {
+    return Expanded(
+      child: RadioListTile<String>(
+        title: Text(label),
+        value: value,
+        groupValue: gender,
+        activeColor: primaryGreen,
+        onChanged: (v) => setState(() => gender = v),
       ),
     );
   }
@@ -534,5 +503,108 @@ class _RegisterPageState extends State<RegisterPage> {
         duration: const Duration(seconds: 4),
       ),
     );
+  }
+}
+
+// ================== ADD MISSING METHODS ==================
+
+Widget _buildSectionContainer({
+  required String title,
+  required IconData icon,
+  required List<Widget> children,
+}) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.03),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: primaryGreen, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textPrimaryColor,
+              ),
+            ),
+          ],
+        ),
+        const Divider(height: 24),
+        ...children,
+      ],
+    ),
+  );
+}
+
+Widget _buildTextField({
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  bool obscure = false,
+  bool enabled = true,
+  TextInputType keyboardType = TextInputType.text,
+  List<TextInputFormatter>? inputFormatters,
+  TextInputAction? textInputAction,
+  Function(String)? onSubmitted,
+}) {
+  return TextField(
+    controller: controller,
+    obscureText: obscure,
+    enabled: enabled,
+    keyboardType: keyboardType,
+    inputFormatters: inputFormatters,
+    textInputAction: textInputAction,
+    onSubmitted: onSubmitted,
+    style: const TextStyle(fontSize: 16, color: textPrimaryColor),
+    decoration: InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(
+        icon,
+        color: enabled ? primaryGreen : Colors.grey,
+      ),
+      filled: true,
+      fillColor: enabled ? const Color(0xFFF9FAFB) : Colors.grey[100],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primaryGreen, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        vertical: 16,
+        horizontal: 16,
+      ),
+    ),
+  );
+}
+String genderToThai(String? gender) {
+  switch (gender) {
+    case 'male':
+      return 'ชาย';
+    case 'female':
+      return 'หญิง';
+    case 'other':
+      return 'อื่น ๆ';
+    default:
+      return '-';
   }
 }

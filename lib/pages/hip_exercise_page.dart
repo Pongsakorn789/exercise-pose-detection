@@ -27,6 +27,7 @@ class _HipExercisePageState extends State<HipExercisePage> {
     super.dispose();
   }
 
+  /// ✅ แก้ตรงนี้อย่างเดียว
   Future<void> _saveToFirebase(Map<String, dynamic> data) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -44,15 +45,19 @@ class _HipExercisePageState extends State<HipExercisePage> {
           .doc(user.uid)
           .collection('exercise_history')
           .add({
-            'exercise': 'hip_adduction_standing', // ท่าบริหารสะโพก
-            'date': data['date'] ?? DateTime.now().toIso8601String(),
-            'left': data['left'] ?? 0,
-            'right': data['right'] ?? 0,
-            'rounds': data['rounds'] ?? 0,
-            'total': data['total'] ?? 0,
-            'duration_seconds': data['durationSec'] ?? 0,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
+        // ✅ ชื่อตรง Firestore Rules
+        'exerciseType': 'hip_adduction_standing',
+
+        // ✅ ต้องเป็น timestamp เท่านั้น
+        'date': FieldValue.serverTimestamp(),
+
+        // field อื่นเก็บได้ตามปกติ
+        'left': data['left'] ?? 0,
+        'right': data['right'] ?? 0,
+        'rounds': data['rounds'] ?? 0,
+        'total': data['total'] ?? 0,
+        'duration_seconds': data['durationSec'] ?? 0,
+      });
 
       if (mounted) {
         _showSummaryDialog(data);
@@ -71,7 +76,6 @@ class _HipExercisePageState extends State<HipExercisePage> {
   }
 
   void _showSummaryDialog(Map<String, dynamic> data) {
-    // Determine duration string
     final durationSec = data['durationSec'] ?? 0;
     final min = (durationSec / 60).floor();
     final sec = durationSec % 60;
@@ -130,8 +134,8 @@ class _HipExercisePageState extends State<HipExercisePage> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 onPressed: () {
-                  Navigator.pop(context); // Close Dialog
-                  Navigator.pop(context); // Back to Home/Selection
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 child: const Text(
                   "ตกลง",

@@ -1,28 +1,44 @@
 import 'package:flutter/material.dart';
 
-/// ===== สีหลัก =====
-const Color primaryGreen = Color(0xFF0F766E);
-const Color goldButtonColor = Color(0xFFB88A1E);
-const Color softBackgroundColor = Color(
-  0xFFF8F9FA,
-); // New minimalist background
-const Color textPrimaryColor = Color(0xFF2D3748); // Dark grey for text
-const Color textSecondaryColor = Color(0xFF718096); // Softer grey
+/// ================== COLOR SYSTEM (Medical + Modern) ==================
 
-/// ===== Decoration สำหรับ TextField (label ลอย) =====
+const Color primaryGreen = Color(0xFF0F766E); // เขียวสุขภาพ
+const Color accentGreen = Color(0xFF14B8A6);
+const Color goldButtonColor = Color(0xFFB88A1E);
+
+const Color softBackgroundColor = Color(0xFFF8F9FA);
+const Color cardBackgroundColor = Colors.white;
+
+const Color textPrimaryColor = Color(0xFF1F2937); // อ่านง่ายกว่าเดิม
+const Color textSecondaryColor = Color(0xFF6B7280);
+
+/// ================== INPUT DECORATION ==================
+
 InputDecoration inputDecoration(String label) {
   return InputDecoration(
     labelText: label,
     floatingLabelBehavior: FloatingLabelBehavior.auto,
-    labelStyle: const TextStyle(fontSize: 18),
+    labelStyle: const TextStyle(
+      fontSize: 18,
+      color: textSecondaryColor,
+    ),
     filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+    fillColor: cardBackgroundColor,
+    contentPadding:
+        const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: Colors.grey.shade300),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: primaryGreen, width: 2),
+    ),
   );
 }
 
-/// ===== TextField มาตรฐาน (ผู้สูงอายุ) =====
+/// ================== TEXT FIELD (Elderly Friendly) ==================
+
 Widget floatingInput({
   required String label,
   required TextEditingController controller,
@@ -35,31 +51,78 @@ Widget floatingInput({
     keyboardType: keyboardType,
     obscureText: obscure,
     enabled: enabled,
-    style: const TextStyle(fontSize: 20),
+    style: const TextStyle(
+      fontSize: 20,
+      color: textPrimaryColor,
+    ),
     decoration: inputDecoration(label),
   );
 }
 
-/// ===== ปุ่มสีทอง =====
-Widget goldButton({required String text, required VoidCallback onPressed}) {
+/// ================== PRIMARY BUTTON (ใช้แทน goldButton ได้) ==================
+
+Widget primaryButton({
+  required String text,
+  required VoidCallback onPressed,
+  IconData? icon,
+}) {
   return SizedBox(
     height: 60,
     width: double.infinity,
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: goldButtonColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-      ),
+    child: ElevatedButton.icon(
       onPressed: onPressed,
-      child: Text(
+      icon: Icon(icon ?? Icons.arrow_forward, size: 26),
+      label: Text(
         text,
-        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryGreen,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        elevation: 2,
       ),
     ),
   );
 }
 
-/// ===== DatePicker + คำนวณอายุ =====
+/// ================== GOLD BUTTON (กรณีต้องการความสำคัญพิเศษ) ==================
+
+Widget goldButton({
+  required String text,
+  required VoidCallback onPressed,
+}) {
+  return SizedBox(
+    height: 60,
+    width: double.infinity,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: goldButtonColor,
+        foregroundColor: Colors.white,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
+}
+
+/// ================== DATE PICKER + AGE ==================
+
 Future<void> pickBirthDate({
   required BuildContext context,
   required TextEditingController birthCtrl,
@@ -70,6 +133,7 @@ Future<void> pickBirthDate({
     initialDate: DateTime(1970),
     firstDate: DateTime(1900),
     lastDate: DateTime.now(),
+    helpText: 'เลือกวันเกิด',
   );
 
   if (picked != null) {
@@ -80,12 +144,16 @@ Future<void> pickBirthDate({
       age--;
     }
 
-    birthCtrl.text = "${picked.day}/${picked.month}/${picked.year}";
+    birthCtrl.text =
+        "${picked.day.toString().padLeft(2, '0')}/"
+        "${picked.month.toString().padLeft(2, '0')}/"
+        "${picked.year}";
     ageCtrl.text = age.toString();
   }
 }
 
-/// ===== คำนวณ BMI =====
+/// ================== BMI CALCULATOR ==================
+
 void calculateBMI({
   required TextEditingController heightCtrl,
   required TextEditingController weightCtrl,
@@ -97,5 +165,7 @@ void calculateBMI({
   if (h != null && w != null && h > 0) {
     final bmi = w / ((h / 100) * (h / 100));
     bmiCtrl.text = bmi.toStringAsFixed(1);
+  } else {
+    bmiCtrl.text = '';
   }
 }

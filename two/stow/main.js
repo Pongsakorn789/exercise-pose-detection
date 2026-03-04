@@ -3,7 +3,7 @@
 const DEBUG_MODE = true;
 
 // เริ่มต้นโค้ดดั้งเดิม
-import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.skypack.dev/@mediapipe/tasks-vision@0.10.0";
+import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/+esm";
 import { detectSideLegRaiseExercise, improvedDetectSideLegRaiseExercise, checkRoundCompletion } from './improved-exercise2.js';
 import { utils } from './utils.js';
 import { exerciseTracker } from './exercise-tracker.js';
@@ -150,19 +150,55 @@ export const globals = {
 
   // เพิ่มฟังก์ชันอัพเดตค่า เพื่อให้มั่นใจว่าการอัพเดตจะส่งผลถึงทั้ง window และ globals
   setLeftCounter: (value) => {
+    console.log(">>> setLeftCounter called:", value);
     leftCounter = value;
     window.leftCounter = value;
     globals.leftCounter = value;
+    
+    // อัปเดตหน้าจอทันที - สำคัญมาก!
+    const dispLeft = document.getElementById("disp-left");
+    if (dispLeft) {
+      dispLeft.textContent = value;
+      console.log("✓ Updated disp-left to:", value);
+    }
+    const topReps = document.getElementById("top-reps");
+    if (topReps) {
+      topReps.textContent = (window.leftCounter || 0) + (window.rightCounter || 0);
+    }
   },
   setRightCounter: (value) => {
+    console.log(">>> setRightCounter called:", value);
     rightCounter = value;
     window.rightCounter = value;
     globals.rightCounter = value;
+    
+    // อัปเดตหน้าจอทันที - สำคัญมาก!
+    const dispRight = document.getElementById("disp-right");
+    if (dispRight) {
+      dispRight.textContent = value;
+      console.log("✓ Updated disp-right to:", value);
+    }
+    const topReps = document.getElementById("top-reps");
+    if (topReps) {
+      topReps.textContent = (window.leftCounter || 0) + (window.rightCounter || 0);
+    }
   },
   setRoundCounter: (value) => {
+    console.log(">>> setRoundCounter called:", value);
     roundCounter = value;
     window.roundCounter = value;
     globals.roundCounter = value;
+    
+    // อัปเดตหน้าจอทันที - สำคัญมาก!
+    const roundDisplay = document.getElementById("round-counter-display");
+    if (roundDisplay) {
+      roundDisplay.textContent = value;
+      console.log("✓ Updated round-counter-display to:", value);
+    }
+    const topRounds = document.getElementById("top-rounds");
+    if (topRounds) {
+      topRounds.textContent = value;
+    }
   }
 };
 
@@ -184,6 +220,7 @@ function debugLog(message, data = null) {
 
 // ปรับปรุงฟังก์ชันสร้างตัวนับให้ใช้ CounterDisplay
 function createCounterDisplay() {
+  console.log("createCounterDisplay called");
   // นำค่าจาก globals มาอัพเดต
   const state = {
     leftCounter: window.leftCounter,
@@ -192,6 +229,8 @@ function createCounterDisplay() {
     targetReps: window.targetReps,
     currentExercise: window.currentExercise
   };
+  
+  console.log("Creating counter display with state:", state);
 
   // เรียกใช้ระบบใหม่
   CounterDisplay.createCounterDisplay(currentExercise, state);
@@ -199,6 +238,8 @@ function createCounterDisplay() {
 
 // ปรับปรุงฟังก์ชันอัพเดตตัวนับให้ใช้ CounterDisplay
 function updateCounter() {
+  console.log("updateCounter called - values:", window.leftCounter, window.rightCounter, window.roundCounter);
+  
   const state = {
     leftCounter: window.leftCounter,
     rightCounter: window.rightCounter,
@@ -206,6 +247,19 @@ function updateCounter() {
     targetReps: window.targetReps,
     currentExercise: window.currentExercise
   };
+
+  // อัปเดต HTML elements โดยตรง
+  const dispLeft = document.getElementById("disp-left");
+  const dispRight = document.getElementById("disp-right");
+  const roundCounterDisplay = document.getElementById("round-counter-display");
+  const topRounds = document.getElementById("top-rounds");
+  const topReps = document.getElementById("top-reps");
+  
+  if (dispLeft) dispLeft.textContent = window.leftCounter;
+  if (dispRight) dispRight.textContent = window.rightCounter;
+  if (roundCounterDisplay) roundCounterDisplay.textContent = window.roundCounter;
+  if (topRounds) topRounds.textContent = window.roundCounter;
+  if (topReps) topReps.textContent = window.leftCounter + window.rightCounter;
 
   // นำค่าปัจจุบันไปอัพเดต
   CounterDisplay.updateCounterDisplay(state);
@@ -595,12 +649,18 @@ function handleNoBodyDetection() {
 
 
 // ฟังก์ชันตรวจสอบการบรรลุเป้าหมาย
+// ปิดการใช้งานเพราะ improved-exercise2.js จัดการรอบใหม่อัตโนมัติอยู่แล้ว
 function checkAchievement() {
+  // ไม่ต้องแสดง achievement animation เพราะจะค้างหน้าจอ
+  // ให้ improved-exercise2.js จัดการเรื่องรอบใหม่แทน
+  console.log("Achievement check disabled - using auto-round in improved-exercise2.js");
+  /*
   if ((window.leftCounter >= window.targetReps && window.rightCounter >= window.targetReps) && !window.achievementShown) {
     showAchievementAnimation();
     window.achievementShown = true;
     achievementShown = true;
   }
+  */
 }
 
 // ปรับปรุงฟังก์ชัน predictWebcam

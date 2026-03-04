@@ -1,9 +1,12 @@
+import 'package:firebase_demo/pages/register_page.dart' show genderToThai;
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../widgets/ui_components.dart';
+import '../utils/formatters.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -14,9 +17,10 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
+
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _birthDateController = TextEditingController(); // Birthday
+  final _birthDateController = TextEditingController();
   final _ageController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
@@ -24,6 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   DateTime? _selectedDate;
   bool _isLoading = false;
+  String? _gender;
 
   @override
   void initState() {
@@ -45,35 +50,34 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-        setState(() {
-          _firstNameController.text = data['firstName'] ?? '';
-          _lastNameController.text = data['lastName'] ?? '';
+    if (user == null) return;
 
-          // Handle Birthday
-          if (data['birthDate'] != null) {
-            Timestamp ts = data['birthDate'];
-            _selectedDate = ts.toDate();
-            _birthDateController.text = DateFormat(
-              'dd/MM/yyyy',
-            ).format(_selectedDate!);
-            _ageController.text = _calculateAge(_selectedDate!).toString();
-          } else {
-            _ageController.text = data['age']?.toString() ?? '';
-          }
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
 
-          _weightController.text = data['weight']?.toString() ?? '';
-          _heightController.text = data['height']?.toString() ?? '';
-          _phoneController.text = data['phoneNumber'] ?? '';
-        });
+    if (!doc.exists) return;
+    final data = doc.data()!;
+
+    setState(() {
+      _firstNameController.text = data['firstName'] ?? '';
+      _lastNameController.text = data['lastName'] ?? '';
+      _gender = data['gender'];
+
+      if (data['birthDate'] is Timestamp) {
+        _selectedDate = (data['birthDate'] as Timestamp).toDate();
+        _birthDateController.text =
+            DateFormat('dd/MM/yyyy').format(_selectedDate!);
+        _ageController.text = _calculateAge(_selectedDate!).toString();
+      } else {
+        _ageController.text = data['age']?.toString() ?? '';
       }
-    }
+
+      _weightController.text = data['weight']?.toString() ?? '';
+      _heightController.text = data['height']?.toString() ?? '';
+      _phoneController.text = data['phoneNumber'] ?? '';
+    });
   }
 
   int _calculateAge(DateTime birthDate) {
@@ -87,7 +91,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime(1960),
       firstDate: DateTime(1900),
@@ -95,7 +99,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: primaryGreen,
               onPrimary: Colors.white,
               onSurface: textPrimaryColor,
@@ -105,10 +109,12 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
-    if (picked != null && picked != _selectedDate) {
+
+    if (picked != null) {
       setState(() {
         _selectedDate = picked;
-        _birthDateController.text = DateFormat('dd/MM/yyyy').format(picked);
+        _birthDateController.text =
+            DateFormat('dd/MM/yyyy').format(picked);
         _ageController.text = _calculateAge(picked).toString();
       });
     }
@@ -120,39 +126,30 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _isLoading = true);
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .update({
-              'firstName': _firstNameController.text.trim(),
-              'lastName': _lastNameController.text.trim(),
-              'birthDate': _selectedDate, // Save Timestamp
-              'age': int.tryParse(_ageController.text.trim()) ?? 0,
-              'weight': double.tryParse(_weightController.text.trim()) ?? 0,
-              'height': double.tryParse(_heightController.text.trim()) ?? 0,
-              'phoneNumber': _phoneController.text.trim(),
-              'lastUpdated': FieldValue.serverTimestamp(),
-            });
+      if (user == null) return;
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('บันทึกข้อมูลสำเร็จ'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+        'firstName': _firstNameController.text.trim(),
+        'lastName': _lastNameController.text.trim(),
+        'birthDate': _selectedDate,
+        'age': int.tryParse(_ageController.text) ?? 0,
+        'weight': double.tryParse(_weightController.text) ?? 0,
+        'height': double.tryParse(_heightController.text) ?? 0,
+        'phoneNumber': _phoneController.text.trim(),
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
-            backgroundColor: Colors.red,
+          const SnackBar(
+            content: Text('บันทึกข้อมูลสำเร็จ'),
+            backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -165,7 +162,7 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: softBackgroundColor,
       appBar: AppBar(
         title: const Text(
-          'แก้ไขข้อมูลส่วนตัว',
+          'ข้อมูลส่วนตัว',
           style: TextStyle(
             color: textPrimaryColor,
             fontWeight: FontWeight.bold,
@@ -175,10 +172,8 @@ class _ProfilePageState extends State<ProfilePage> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: textPrimaryColor,
-          ),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: textPrimaryColor),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -188,97 +183,136 @@ class _ProfilePageState extends State<ProfilePage> {
           key: _formKey,
           child: Column(
             children: [
-              _buildAvatar(),
-              const SizedBox(height: 32),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      "ชื่อ",
-                      _firstNameController,
-                      Icons.person,
+              /// 👤 Avatar + Gender
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      "นามสกุล",
-                      _lastNameController,
-                      Icons.person_outline,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 56,
+                      backgroundColor: Color(0xFFF1F5F9),
+                      child: Icon(Icons.person,
+                          size: 70, color: Colors.grey),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                "เบอร์โทรศัพท์",
-                _phoneController,
-                Icons.phone,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Birthday and Age Row
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: GestureDetector(
-                      onTap: () => _selectDate(context),
-                      child: AbsorbPointer(
-                        child: _buildTextField(
-                          "วันเดือนปีเกิด",
-                          _birthDateController,
-                          Icons.calendar_today,
-                          readOnly: true, // Make strictly read-only
+                    const SizedBox(height: 12),
+                    if (_gender != null)
+                      Text(
+                        'เพศ: ${genderToThai(_gender)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: textPrimaryColor,
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: _buildTextField(
-                      "อายุ (ปี)",
-                      _ageController,
-                      Icons.cake,
-                      keyboardType: TextInputType.number,
-                      readOnly: true, // Calculated automatically
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
 
-              Row(
+              const SizedBox(height: 32),
+
+              _buildCardSection(
+                title: "ข้อมูลทั่วไป",
+                icon: Icons.person_outline,
                 children: [
-                  Expanded(
-                    child: _buildTextField(
-                      "น้ำหนัก (กก.)",
-                      _weightController,
-                      Icons.monitor_weight,
-                      keyboardType: TextInputType.number,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          "ชื่อ",
+                          _firstNameController,
+                          Icons.person,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTextField(
+                          "นามสกุล",
+                          _lastNameController,
+                          Icons.person_outline,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      "ส่วนสูง (ซม.)",
-                      _heightController,
-                      Icons.height,
-                      keyboardType: TextInputType.number,
-                    ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    "เบอร์โทรศัพท์",
+                    _phoneController,
+                    Icons.phone,
+                    keyboardType: TextInputType.phone,
                   ),
                 ],
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
+
+              _buildCardSection(
+                title: "ข้อมูลสุขภาพ",
+                icon: Icons.favorite_outline,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context),
+                          child: AbsorbPointer(
+                            child: _buildTextField(
+                              "วันเดือนปีเกิด",
+                              _birthDateController,
+                              Icons.calendar_today,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: _buildTextField(
+                          "อายุ",
+                          _ageController,
+                          Icons.cake,
+                          readOnly: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          "น้ำหนัก (กก.)",
+                          _weightController,
+                          Icons.monitor_weight,
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTextField(
+                          "ส่วนสูง (ซม.)",
+                          _heightController,
+                          Icons.height,
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
 
               SizedBox(
                 width: double.infinity,
@@ -287,10 +321,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: _isLoading ? null : _updateProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryGreen,
+                    elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 5,
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
@@ -311,31 +345,47 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildAvatar() {
-    return Stack(
-      alignment: Alignment.bottomRight,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: primaryGreen, width: 3),
+  /// ===== UI Components =====
+
+  Widget _buildCardSection({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: const CircleAvatar(
-            radius: 60,
-            backgroundColor: Colors.white,
-            child: Icon(Icons.person, size: 80, color: Colors.grey),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: primaryGreen),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textPrimaryColor,
+                ),
+              ),
+            ],
           ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-            color: primaryGreen,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.edit, color: Colors.white, size: 20),
-        ),
-      ],
+          const SizedBox(height: 20),
+          ...children,
+        ],
+      ),
     );
   }
 
@@ -344,50 +394,23 @@ class _ProfilePageState extends State<ProfilePage> {
     TextEditingController controller,
     IconData icon, {
     TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
     bool readOnly = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: primaryGreen),
+        filled: true,
+        fillColor: readOnly ? Colors.grey[100] : const Color(0xFFF9FAFB),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: readOnly ? Colors.grey[100] : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            readOnly: readOnly,
-            decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: Colors.grey),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-            validator: (value) =>
-                value == null || value.isEmpty ? 'กรุณาระบุข้อมูล' : null,
-          ),
-        ),
-      ],
+      ),
+      validator: (v) => v == null || v.isEmpty ? 'กรุณาระบุข้อมูล' : null,
     );
   }
 }

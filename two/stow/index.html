@@ -274,7 +274,8 @@
       padding: 16px;
       width: 150px;
       text-align: center;
-      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+backdrop-filter: blur(8px);
       z-index: 10;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
@@ -426,29 +427,9 @@
   <script src="angle-display.js" type="module"></script>
 
   <script>
-    // อัปเดต badge แสดงจำนวนวันที่ออกกำลังกาย
+    // ฟังก์ชันนี้ถูกปิดการใช้งาน - ไม่แสดง badge สถิติอีกต่อไป
     function updateStatisticsBadge() {
-      const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '{}');
-      const totalDays = Object.keys(exerciseHistory).length;
-
-      const statsButton = document.getElementById('statisticsButton');
-      if (statsButton && totalDays > 0) {
-        // ตรวจสอบว่ามี badge อยู่แล้วหรือไม่
-        let badge = statsButton.querySelector('.stat-badge');
-        if (!badge) {
-          badge = document.createElement('span');
-          badge.className = 'stat-badge';
-          statsButton.style.position = 'relative';
-          statsButton.appendChild(badge);
-        }
-        badge.textContent = totalDays;
-
-        // เพิ่มเอฟเฟกต์ pulse ถ้ามีข้อมูลใหม่
-        badge.style.animation = 'pulse 1s ease-in-out';
-        setTimeout(() => {
-          badge.style.animation = '';
-        }, 1000);
-      }
+      // ไม่ทำงาน - เก็บไว้เพื่อไม่ให้เกิด error
     }
 
     // Fullscreen toggle

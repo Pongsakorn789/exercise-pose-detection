@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../auth/auth_service.dart';
 import '../widgets/ui_components.dart';
 import 'physio_register_page.dart';
-import 'home_page.dart';
+import 'physio_home_page.dart';
+
 
 class PhysioLoginPage extends StatefulWidget {
   const PhysioLoginPage({super.key});
@@ -67,8 +68,9 @@ class _PhysioLoginPageState extends State<PhysioLoginPage> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomePage(role: 'physio')),
+          MaterialPageRoute(builder: (_) => const PhysioHomePage()),
         );
+
       }
     } on FirebaseAuthException catch (e) {
       setState(() => isLoading = false);

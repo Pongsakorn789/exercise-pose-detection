@@ -31,6 +31,9 @@ class InstructionSelectionPage extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            // =========================
+            // การ์ดที่ 1
+            // =========================
             _buildInstructionCard(
               context,
               title: 'ท่ายกดัมเบลแบบยืน',
@@ -38,20 +41,29 @@ class InstructionSelectionPage extends StatelessWidget {
               icon: Icons.fitness_center_rounded,
               color: primaryGreen,
               steps: [
-                'ยืนตัวตรง แยกเท้าห่างกันประมาณหัวไหล่',
-                'ถือดัมเบลในมือทั้งสองข้าง แขนเหยียดตรงข้างลำตัว',
-                'หมุนข้อมือให้ฝ่ามือหันไปด้านหน้า',
-                'หายใจออก พร้อมเกร็งแขนยกดัมเบลขึ้นมาทางหัวไหล่',
-                'ค้างไว้สักครู่ แล้วค่อยๆ ผ่อนแรงลดดัมเบลลงพร้อมหายใจเข้า',
-                'ทำซ้ำ 10-15 ครั้งต่อเซต',
+                'ยืนตัวตรง แยกเท้าห่างกันประมาณระดับหัวไหล่',
+                'ถือดัมเบลในมือทั้งสองข้าง แขนแนบลำตัว',
+                'เริ่มยกแขนขึ้นด้านข้างจนถึงตำแหน่งแถบสีเขียวบนหน้าจอ',
+                'แถบสีเขียวแสดงถึงท่าเริ่มต้นที่ถูกต้อง แอปจะเริ่มนับเวลาอัตโนมัติ 2 วินาที',
+                'หลังจากครบเวลา ให้ยกแขนขึ้นต่อจนถึงตำแหน่งแถบสีแดง',
+                'แถบสีแดงแสดงถึงท่าสิ้นสุดของการยกแขนเหนือศีรษะ',
+                'เมื่อแขนอยู่ในแถบสีแดง แอปจะนับเวลาอัตโนมัติอีก 2 วินาที',
+                'เมื่อทำครบทั้งแถบสีเขียวและแถบสีแดง ระบบจะนับเป็น 1 ครั้ง',
+                'ทำซ้ำตามจำนวนครั้งที่นักกายภาพกำหนด',
               ],
+
               tips: [
-                'อย่าเหวี่ยงตัวหรือใช้แรงจากหลังช่วยยก',
-                'ล็อกข้อศอกให้อยู่กับที่ ไม่ขยับไปมา',
-                'เลือกน้ำหนักดัมเบลที่เหมาะสม ไม่หนักเกินไป',
+                'ยกแขนช้า ๆ และควบคุมการเคลื่อนไหว',
+                'หลีกเลี่ยงการเหวี่ยงแขนหรือแอ่นหลัง',
+                'หากมีอาการปวดหรือเวียนศีรษะให้หยุดทันที',
               ],
             ),
+
             const SizedBox(height: 16),
+
+            // =========================
+            // การ์ดที่ 2
+            // =========================
             _buildInstructionCard(
               context,
               title: 'ท่าบริหารสะโพกด้านข้าง',
@@ -59,19 +71,24 @@ class InstructionSelectionPage extends StatelessWidget {
               icon: Icons.accessibility_new_rounded,
               color: Colors.orange,
               steps: [
-                'ยืนตัวตรง มือจับพนักเก้าอี้หรือกำแพงเพื่อทรงตัว',
-                'ถ่ายน้ำหนักไปที่ขาข้างซ้าย',
-                'เกร็งหน้าท้อง แล้วค่อยๆ กางขาขวาออกไปด้านข้าง',
-                'พยายามให้ปลายเท้าชี้ไปด้านหน้า ไม่หมุนออก',
-                'ยกขาให้สูงเท่าที่ทำได้โดยที่ลำตัวไม่เอียง',
-                'ค่อยๆ วางขากลับสู่ท่าเริ่มต้น',
-                'ทำครบ 10 ครั้งแล้วสลับทำอีกข้าง',
+                'ยืนตัวตรง เท้าวางราบกับพื้น แยกเท้ากว้างประมาณระดับหัวไหล่',
+                'ใช้มือจับพนักเก้าอี้หรือผนังเพื่อช่วยพยุงร่างกาย',
+                'ถ่ายน้ำหนักตัวไปที่ขาข้างหนึ่ง โดยให้ลำตัวตั้งตรง',
+                'ค่อย ๆ ยกขาอีกข้างออกไปด้านข้าง โดยให้ปลายเท้าชี้ไปด้านหน้า',
+                'ยกขาในมุมประมาณ 30–45 องศา หรือจนถึงตำแหน่งแถบสีเขียวบนหน้าจอแอป',
+                'เมื่อขาอยู่ในตำแหน่งที่ถูกต้อง แอปจะเริ่มนับเวลาอัตโนมัติประมาณ 2 วินาที',
+                'ค่อย ๆ วางขากลับสู่ท่าเริ่มต้นอย่างช้า ๆ และควบคุมการเคลื่อนไหว',
+                'ระบบจะนับจำนวนครั้งให้อัตโนมัติเมื่อทำท่าถูกต้อง',
+                'ทำซ้ำตามจำนวนครั้งที่กำหนด แล้วสลับทำอีกข้าง',
               ],
+
               tips: [
-                'ลำตัวต้องตั้งตรงตลอดเวลา ไม่เอียงตัวตามขา',
-                'เคลื่อนไหวช้าๆ เพื่อโฟกัสกล้ามเนื้อ',
-                'ระวังอย่าเตะขาสูงเกินไปจนเจ็บสะโพก',
+                'ไม่ควรยกขาสูงเกินไป เพื่อป้องกันการบาดเจ็บ',
+                'ควรเคลื่อนไหวอย่างช้า ๆ และควบคุมการทรงตัว',
+                'หากมีอาการปวด เวียนศีรษะ หรือเสียการทรงตัว ให้หยุดทันที',
+                'จำนวนครั้งควรอยู่ภายใต้การดูแลของนักกายภาพบำบัด',
               ],
+
             ),
           ],
         ),
@@ -79,6 +96,9 @@ class InstructionSelectionPage extends StatelessWidget {
     );
   }
 
+  // ==================================================
+  // Instruction Card
+  // ==================================================
   Widget _buildInstructionCard(
     BuildContext context, {
     required String title,
@@ -143,7 +163,10 @@ class InstructionSelectionPage extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
                   ),
                 ],
               ),
@@ -160,6 +183,9 @@ class InstructionSelectionPage extends StatelessWidget {
   }
 }
 
+// ==================================================
+// Detail Page
+// ==================================================
 class InstructionDetailPage extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -181,18 +207,16 @@ class InstructionDetailPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: softBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          "รายละเอียดท่านั่ง",
-          style: TextStyle(
+        title: Text(
+          title,
+          style: const TextStyle(
             color: textPrimaryColor,
             fontWeight: FontWeight.bold,
           ),
-        ), // Title placeholders, let's use the actual title passed?
-        // Actually user might want specific "วิธีทำ..." title.
-        // Let's just use 'วิธีฝึก...' + title
+        ),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
@@ -206,7 +230,6 @@ class InstructionDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Image/Icon
             Center(
               child: Container(
                 padding: const EdgeInsets.all(40),
@@ -217,23 +240,11 @@ class InstructionDetailPage extends StatelessWidget {
                 child: Icon(icon, size: 80, color: color),
               ),
             ),
-            const SizedBox(height: 24),
-            Center(
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: textPrimaryColor,
-                ),
-              ),
-            ),
             const SizedBox(height: 32),
 
             _buildSectionTitle(
               Icons.format_list_numbered_rounded,
-              "ขั้นตอนการฝึก",
+              'ขั้นตอนการฝึก',
             ),
             const SizedBox(height: 16),
             ...steps.asMap().entries.map(
@@ -243,7 +254,7 @@ class InstructionDetailPage extends StatelessWidget {
             const SizedBox(height: 32),
             _buildSectionTitle(
               Icons.lightbulb_outline_rounded,
-              "ข้อแนะนำ / สิ่งที่ควรระวัง",
+              'ข้อแนะนำ / สิ่งที่ควรระวัง',
             ),
             const SizedBox(height: 16),
             Column(children: tips.map((tip) => _buildTipItem(tip)).toList()),

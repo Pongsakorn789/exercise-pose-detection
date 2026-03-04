@@ -873,3 +873,16 @@ html {
   display: none !important;
   visibility: hidden !important;
 }
+
+/* ===============================
+   HIDE TOP INFO CARD (FitAI | รอบ | ครั้ง)
+   ไม่ลบโครงสร้าง HTML
+   =============================== */
+
+.top-info-card {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}

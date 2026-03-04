@@ -52,14 +52,15 @@ const EventTypes = {
    * @param {number} rounds จำนวนรอบที่ทำเสร็จ
    * @param {number} leftReps จำนวนครั้งของขาซ้าย
    * @param {number} rightReps จำนวนครั้งของขาขวา
+   * @param {number} duration ระยะเวลาที่ใช้ (วินาที)
    */
-  function roundCompleted(exerciseNumber, rounds, leftReps = 0, rightReps = 0) {
+  function roundCompleted(exerciseNumber, rounds, leftReps = 0, rightReps = 0, duration = 0) {
     dispatchCustomEvent(EventTypes.ROUND_COMPLETED, {
       exerciseNumber,
       rounds,
       leftReps,
       rightReps,
-      duration: 0
+      duration
     });
   }
   

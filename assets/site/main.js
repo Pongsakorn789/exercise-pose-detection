@@ -3,7 +3,7 @@
 const DEBUG_MODE = true;
 
 // เริ่มต้นโค้ดดั้งเดิม
-import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.skypack.dev/@mediapipe/tasks-vision@0.10.0";
+import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/+esm";
 import { detectStandingDumbbellExercise, checkRoundCompletion } from './standing-dumbbell-exercise.js';
 import { utils } from './utils.js';
 import { exerciseTracker } from './exercise-tracker.js';
@@ -370,35 +370,83 @@ const createPoseLandmarker = async () => {
 // Start initialization
 createPoseLandmarker();
 
-// Summary button handler: save summary to localStorage and open `summary.html`
+// Summary button handler: save summary and exercise data, then open summary.html
 if (summaryButton) {
   summaryButton.addEventListener('click', () => {
-    const left = (typeof globals !== 'undefined' && globals.leftCounter != null) ? globals.leftCounter : (window.leftCounter || 0);
-    const right = (typeof globals !== 'undefined' && globals.rightCounter != null) ? globals.rightCounter : (window.rightCounter || 0);
-    const rounds = (typeof globals !== 'undefined' && globals.roundCounter != null) ? globals.roundCounter : (window.roundCounter || 0);
+    console.log('📊 กดปุ่มสรุปผล');
+    
+    // ดึงค่าจาก window (global state)
+    const left = window.leftCounter || 0;
+    const right = window.rightCounter || 0;
+    const rounds = window.roundCounter || 0;
     const total = left + right;
-    const durationSec = window.sessionStartTime ? Math.floor((Date.now() - window.sessionStartTime) / 1000) : 0;
-
-    const date = new Date().toLocaleString();
-
+    
+    // คำนวณระยะเวลา
+    const durationSec = window.sessionStartTime 
+      ? Math.floor((Date.now() - window.sessionStartTime) / 1000) 
+      : 0;
+    
+    // สร้างวันที่แบบไทย
+    const date = new Date().toLocaleString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+    
+    console.log('📝 ข้อมูลที่จะบันทึก:', { left, right, rounds, total, durationSec, date });
+    
+    // 1. บันทึกข้อมูลสรุปผลสำหรับหน้า summary.html
     const summary = {
+      exerciseNumber: window.currentExercise || 3,
+      exerciseName: 'ท่ายกแขนเหนือศีรษะ',
       date,
       left,
       right,
       rounds,
       total,
-      durationSec
+      durationSec,
+      timestamp: Date.now()
     };
-
+    
     try {
       localStorage.setItem('lastSummary', JSON.stringify(summary));
+      console.log('✅ บันทึก lastSummary สำเร็จ');
     } catch (e) {
-      console.warn('ไม่สามารถบันทึกสรุปผลลง localStorage:', e);
+      console.error('❌ ไม่สามารถบันทึก lastSummary:', e);
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      return;
     }
-
-    // Navigate to summary page
+    
+    // 2. บันทึกลงประวัติการออกกำลังกาย (exerciseHistory)
+    if (rounds > 0 || total > 0) {
+      try {
+        const saved = exerciseTracker.saveExercise(
+          window.currentExercise || 3,
+          rounds,
+          left,
+          right,
+          durationSec
+        );
+        
+        if (saved) {
+          console.log('✅ บันทึกลง exerciseHistory สำเร็จ');
+        } else {
+          console.warn('⚠️ การบันทึกลง exerciseHistory ไม่สำเร็จ');
+        }
+      } catch (e) {
+        console.error('❌ เกิดข้อผิดพลาดในการบันทึก exerciseHistory:', e);
+      }
+    } else {
+      console.log('ℹ️ ไม่มีข้อมูลการออกกำลังกายให้บันทึก (rounds=0, total=0)');
+    }
+    
+    // 3. เปิดหน้า summary.html
+    console.log('🔄 กำลังเปิดหน้า summary.html');
     window.location.href = 'summary.html';
   });
+  
+  console.log('✅ ลงทะเบียน summaryButton event listener สำเร็จ');
 }
 
 // เพิ่มปุ่มทดสอบนับ

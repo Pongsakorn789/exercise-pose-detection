@@ -10,8 +10,8 @@ import { AngleDisplay } from './angle-display.js';
 // ค่าคงที่สำหรับช่วงมุมที่ถูกต้อง
 const START_POSITION_MIN = 160;   // มุมเริ่มต้น (แขนลง) ขั้นต่ำ
 const START_POSITION_MAX = 180;   // มุมเริ่มต้น (แขนลง) สูงสุด
-const END_POSITION_MIN = 30;      // มุมสิ้นสุด (แขนขึ้น) ขั้นต่ำ
-const END_POSITION_MAX = 60;      // มุมสิ้นสุด (แขนขึ้น) สูงสุด
+const END_POSITION_MIN = 60;      // มุมสิ้นสุด (แขนขึ้น) ขั้นต่ำ
+const END_POSITION_MAX = 90;      // มุมสิ้นสุด (แขนขึ้น) สูงสุด
 const REQUIRED_HOLD_TIME = 2.0;   // เวลาที่ต้องค้าง 2.0 วินาที
 
 // ค่าคงที่สำหรับการตรวจสอบท่าทางยืน
@@ -415,7 +415,7 @@ function detectStandingDumbbellExercise(landmarks) {
     
     drawHintInfo(
       globals.canvasCtx,
-      {x: leftElbowX, y: leftElbowY - 30},
+      {x: leftElbowX, y: leftElbowY - 60},
       `ซ้าย: ${smoothedLeftAngle.toFixed(1)}° - ${leftAngleInfo.message}`,
       leftAngleInfo.color,
       scaleFactor
@@ -423,7 +423,7 @@ function detectStandingDumbbellExercise(landmarks) {
     
     drawHintInfo(
       globals.canvasCtx,
-      {x: rightElbowX, y: rightElbowY - 30},
+      {x: rightElbowX, y: rightElbowY - 60},
       `ขวา: ${smoothedRightAngle.toFixed(1)}° - ${rightAngleInfo.message}`,
       rightAngleInfo.color,
       scaleFactor
@@ -447,15 +447,15 @@ function detectStandingDumbbellExercise(landmarks) {
     window.basePositions = {};
   }
 
-  if (!window.calibrated && window.baseSamples.length < 30) {
+  if (!window.calibrated && window.baseSamples.length < 60) {
     window.baseSamples.push({
       leftArmAngle: smoothedLeftAngle,
       rightArmAngle: smoothedRightAngle
     });
     
-    globals.canvasCtx.fillText(`กำลังเก็บตัวอย่าง: ${window.baseSamples.length}/30`, 10, 60);
+    globals.canvasCtx.fillText(`กำลังเก็บตัวอย่าง: ${window.baseSamples.length}/60`, 10, 90);
 
-    if (window.baseSamples.length >= 30) {
+    if (window.baseSamples.length >= 60) {
       window.calibrated = true;
       globals.statusElement.textContent = "พร้อมนับแล้ว เริ่มออกกำลังกายได้";
       globals.statusElement.style.color = "#4CAF50";

@@ -6,42 +6,34 @@ class ThaiIdInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    var text = newValue.text;
+    // เอาเฉพาะตัวเลข
+    String digitsOnly =
+        newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    if (newValue.selection.baseOffset == 0) {
-      return newValue;
+    // จำกัด 13 หลัก
+    if (digitsOnly.length > 13) {
+      digitsOnly = digitsOnly.substring(0, 13);
     }
 
-    var buffer = StringBuffer();
-    for (int i = 0; i < text.length; i++) {
-      buffer.write(text[i]);
-      var nonZeroIndex = i + 1;
-      if (nonZeroIndex <= 1 && nonZeroIndex != text.length) {
-        buffer.write('-'); // After 1st digit
-      } else if (nonZeroIndex == 5 && nonZeroIndex != text.length) {
-        buffer.write(
-          '-',
-        ); // After 5th digit (actually 5th char including hyphens?)
-        // Wait, text here includes user input. If I use digits only logic it's safer.
-      }
-    }
+    final buffer = StringBuffer();
 
-    // Better approach: strip all non-digits, then re-format
-    String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (newText.length > 13) newText = newText.substring(0, 13);
+    for (int i = 0; i < digitsOnly.length; i++) {
+      buffer.write(digitsOnly[i]);
 
-    buffer.clear();
-    for (int i = 0; i < newText.length; i++) {
-      buffer.write(newText[i]);
-      if ((i == 0 || i == 4 || i == 9 || i == 11) && i != newText.length - 1) {
+      // ใส่ขีดตามตำแหน่ง
+      if ((i == 0 || i == 4 || i == 9 || i == 11) &&
+          i != digitsOnly.length - 1) {
         buffer.write('-');
       }
     }
 
-    String string = buffer.toString();
-    return newValue.copyWith(
-      text: string,
-      selection: TextSelection.collapsed(offset: string.length),
+    final formatted = buffer.toString();
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(
+        offset: formatted.length,
+      ),
     );
   }
 }

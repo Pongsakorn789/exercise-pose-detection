@@ -23,6 +23,10 @@ let angleDisplayCreated = false;
 let leftLegHoldTime = 0;
 let rightLegHoldTime = 0;
 
+// *** เพิ่มตัวแปรสำหรับจับเวลาการออกกำลังกาย ***
+let exerciseStartTime = 0; // เวลาเริ่มต้นการออกกำลังกาย
+let roundStartTime = 0; // เวลาเริ่มต้นรอบปัจจุบัน
+
 // ตัวแปรสำหรับการติดตามเวลาเริ่มต้นการค้างขาที่ถูกต้อง
 let leftCorrectAngleStartTime = 0;
 let rightCorrectAngleStartTime = 0;
@@ -368,6 +372,13 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
   // บันทึกตำแหน่งทุกเฟรม
   if (window.PositionTracker) {
     window.PositionTracker.recordPosition(landmarks);
+  }
+
+  // *** เริ่มจับเวลาเมื่อเริ่มออกกำลังกาย ***
+  if (exerciseStartTime === 0) {
+    exerciseStartTime = Date.now();
+    roundStartTime = Date.now();
+    console.log("เริ่มจับเวลาการออกกำลังกาย:", new Date(exerciseStartTime).toLocaleTimeString());
   }
 
   // ... รหัสการตรวจจับท่าทางอื่นๆ
@@ -800,11 +811,13 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
         // แสดงเอฟเฟกต์การนับ
         utils.showCountEffect(true);
 
-        // อัปเดตตัวนับ
+        // อัปเดตตัวนับ พร้อมพิมพ์ข้อมูลสำหรับตรวจสอบ
+        console.log("Dispatching updateCounter event - Left:", globals.leftCounter, "Right:", globals.rightCounter);
         EventSystem.updateCounter({
           leftCounter: globals.leftCounter,
           rightCounter: globals.rightCounter,
-          roundCounter: globals.roundCounter
+          roundCounter: globals.roundCounter,
+          targetReps: globals.targetReps
         });
 
         // รีเซ็ตตัวแสดงเวลาค้างขา
@@ -1035,11 +1048,13 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
         // แสดงเอฟเฟกต์การนับ
         utils.showCountEffect(false);
 
-        // อัปเดตตัวนับ
+        // อัปเดตตัวนับ พร้อมพิมพ์ข้อมูลสำหรับตรวจสอบ
+        console.log("Dispatching updateCounter event - Left:", globals.leftCounter, "Right:", globals.rightCounter);
         EventSystem.updateCounter({
           leftCounter: globals.leftCounter,
           rightCounter: globals.rightCounter,
-          roundCounter: globals.roundCounter
+          roundCounter: globals.roundCounter,
+          targetReps: globals.targetReps
         });
 
         // รีเซ็ตตัวแสดงเวลาค้างขา
@@ -1087,6 +1102,16 @@ function improvedDetectSideLegRaiseExercise(landmarks) {
 */
 function checkRoundCompletion() {
   if (globals.leftCounter >= globals.targetReps && globals.rightCounter >= globals.targetReps) {
+    // คำนวณระยะเวลาที่ใช้ในรอบนี้
+    const currentTime = Date.now();
+    const roundDuration = Math.floor((currentTime - roundStartTime) / 1000); // วินาที
+    
+    console.log("=== การคำนวณระยะเวลา ===");
+    console.log("roundStartTime:", roundStartTime, new Date(roundStartTime).toLocaleTimeString());
+    console.log("currentTime:", currentTime, new Date(currentTime).toLocaleTimeString());
+    console.log("roundDuration (seconds):", roundDuration);
+    console.log("========================");
+    
     // เพิ่มตัวนับรอบ
     globals.setRoundCounter(globals.roundCounter + 1);
 
@@ -1094,12 +1119,13 @@ function checkRoundCompletion() {
     globals.statusElement.textContent = `ทำครบรอบที่ ${globals.roundCounter} แล้ว! (${globals.leftCounter}/${globals.targetReps} ซ้าย, ${globals.rightCounter}/${globals.targetReps} ขวา)`;
     globals.statusElement.style.color = "#4CAF50";
 
-    // บันทึกการออกกำลังกาย
+    // บันทึกการออกกำลังกาย พร้อมระยะเวลา
     EventSystem.roundCompleted(
       globals.currentExercise,
       1,
       globals.leftCounter,
-      globals.rightCounter
+      globals.rightCounter,
+      roundDuration
     );
 
     // บรรยายผลสำเร็จ
@@ -1114,8 +1140,17 @@ function checkRoundCompletion() {
     // รีเซ็ตตัวนับของแต่ละขา เริ่มรอบใหม่
     if (globals.autoCountEnabled) {
       setTimeout(() => {
+        console.log("Resetting counters for new round");
         globals.setLeftCounter(0);
         globals.setRightCounter(0);
+        
+        // อัปเดต window variables
+        window.leftCounter = 0;
+        window.rightCounter = 0;
+        
+        // *** รีเซ็ตเวลาเริ่มต้นรอบใหม่ ***
+        roundStartTime = Date.now();
+        console.log("รีเซ็ตเวลาเริ่มรอบใหม่:", new Date(roundStartTime).toLocaleTimeString());
 
         // รีเซ็ตตัวนับเวลาค้างขา
         if (angleDisplayCreated) {
@@ -1123,13 +1158,16 @@ function checkRoundCompletion() {
         }
 
         // ส่งอีเวนต์ให้อัปเดตตัวแสดงผล
+        console.log("Dispatching updateCounter event - Reset for new round");
         EventSystem.updateCounter({
-          leftCounter: globals.leftCounter,
-          rightCounter: globals.rightCounter,
-          roundCounter: globals.roundCounter
+          leftCounter: 0,
+          rightCounter: 0,
+          roundCounter: globals.roundCounter,
+          targetReps: globals.targetReps
         });
 
         globals.statusElement.textContent = `เริ่มรอบที่ ${globals.roundCounter + 1}`;
+        globals.statusElement.style.color = "#2196F3";
 
         if (window.voiceFeedbackEnabled) {
           import('./exercise-tracker.js').then(module => {
@@ -1168,6 +1206,10 @@ function resetDetection() {
 
   // รีเซ็ตสถานะการแสดงผลมุม
   angleArcDisplayed = false;
+  
+  // *** รีเซ็ตเวลาการออกกำลังกาย ***
+  exerciseStartTime = 0;
+  roundStartTime = 0;
 }
 
 export {

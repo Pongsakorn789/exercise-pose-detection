@@ -136,7 +136,7 @@ function speakFeedback(text) {
   }
 }
 
-// แก้ไขฟังก์ชัน calculateAngle - แก้ไขการใช้ตัวแปร d ที่ไม่ได้ประกาศและปรับปรุงการรับค่า
+
 function calculateAngle(x1, y1, x2, y2, x3, y3) {
   // กรณีที่รับค่าเป็น object ที่มี x, y properties
   if (arguments.length === 3 && typeof x1 === 'object' && typeof y1 === 'object' && typeof x2 === 'object') {

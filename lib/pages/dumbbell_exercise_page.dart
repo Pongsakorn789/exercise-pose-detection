@@ -17,7 +17,6 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
   @override
   void initState() {
     super.initState();
-    // Serving assets/site on port 8080
     _server = InAppLocalhostServer(documentRoot: 'assets/site', port: 8080);
     _server.start();
   }
@@ -43,15 +42,19 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
           .doc(user.uid)
           .collection('exercise_history')
           .add({
-            'exercise': 'dumbbell_standing', // ระบุประเภทท่า
-            'date': data['date'],
-            'left': data['left'],
-            'right': data['right'],
-            'rounds': data['rounds'],
-            'total': data['total'],
-            'duration_seconds': data['durationSec'],
-            'timestamp': FieldValue.serverTimestamp(),
-          });
+        // ✅ ชื่อตรงตาม Firestore Rules
+        'exerciseType': 'dumbbell_standing',
+
+        // ✅ บังคับให้เป็น timestamp
+        'date': FieldValue.serverTimestamp(),
+
+        // field อื่น ๆ เก็บได้ตามปกติ
+        'left': data['left'],
+        'right': data['right'],
+        'rounds': data['rounds'],
+        'total': data['total'],
+        'duration_seconds': data['durationSec'],
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +65,7 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
         );
       }
     } catch (e) {
-      debugPrint('Error saving to Firebase: $e');
+      debugPrint('❌ Error saving to Firebase: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -110,7 +113,7 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
             child: Container(
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               decoration: BoxDecoration(
-                color: Colors.black, // Camera background
+                color: Colors.black,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -136,7 +139,8 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
                       handlerName: 'saveExerciseData',
                       callback: (args) {
                         if (args.isNotEmpty) {
-                          final data = args[0] as Map<String, dynamic>;
+                          final data =
+                              Map<String, dynamic>.from(args[0]);
                           _saveToFirebase(data);
                           return 'Saved';
                         }
