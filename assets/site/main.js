@@ -440,6 +440,17 @@ if (summaryButton) {
     } else {
       console.log('ℹ️ ไม่มีข้อมูลการออกกำลังกายให้บันทึก (rounds=0, total=0)');
     }
+   if (window.flutter_inappwebview != null) {
+      window.flutter_inappwebview.callHandler('saveExerciseData', {
+        'exercise': summary.exerciseName,
+        'rounds': summary.rounds,
+        'left': summary.left,     // แก้ให้ตรงกับที่ Dart รอรับ
+        'right': summary.right,   // แก้ให้ตรงกับที่ Dart รอรับ
+        'total': summary.total,   // แก้ให้ตรงกับที่ Dart รอรับ
+        'durationSec': summary.durationSec
+      });
+      console.log('✅ ส่งข้อมูล saveExerciseData ให้ Flutter จัดการเซฟลง Firebase แล้ว');
+    }
     
     // 3. เปิดหน้า summary.html
     console.log('🔄 กำลังเปิดหน้า summary.html');
