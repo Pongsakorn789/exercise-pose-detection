@@ -229,6 +229,14 @@ function createExerciseHistoryDisplay() {
 
 // ระบบเสียง
 function speakFeedback(text) {
+  // ==========================================================
+  // ⭐ โค้ดสะพานเชื่อม: ถ้าแอปเปิดอยู่ ให้ส่งข้อความไปให้แอป Flutter พูด
+  if (window.flutter_inappwebview != null) {
+    window.flutter_inappwebview.callHandler('speakText', text);
+    return; // ส่งเสร็จแล้วจบการทำงานตรงนี้เลย (ไม่รันโค้ดเบราว์เซอร์ต่อ)
+  }
+  // ==========================================================
+
   if (!window.speechSynthesis) return;
   if (window.speechSynthesis.speaking) {
     window.speechSynthesis.cancel();

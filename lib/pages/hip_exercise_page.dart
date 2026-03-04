@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_tts/flutter_tts.dart'; // ✅ นำเข้าระบบเสียง
 import '../widgets/ui_components.dart';
 
 class HipExercisePage extends StatefulWidget {
@@ -13,10 +15,20 @@ class HipExercisePage extends StatefulWidget {
 
 class _HipExercisePageState extends State<HipExercisePage> {
   late InAppLocalhostServer _server;
+  final FlutterTts flutterTts = FlutterTts(); // ✅ สร้างตัวแปรลำโพง
+
+  Future<void> _requestCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (status.isDenied) {
+      await Permission.camera.request();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _requestCameraPermission();
+    flutterTts.setLanguage("th-TH"); // ✅ ตั้งค่าให้พูดภาษาไทย
     _server = InAppLocalhostServer(documentRoot: 'two/stow', port: 8081);
     _server.start();
   }
@@ -24,10 +36,10 @@ class _HipExercisePageState extends State<HipExercisePage> {
   @override
   void dispose() {
     _server.close();
+    flutterTts.stop(); // ✅ ปิดเสียงตอนออกหน้า
     super.dispose();
   }
 
-  /// ✅ แก้ตรงนี้อย่างเดียว
   Future<void> _saveToFirebase(Map<String, dynamic> data) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -45,13 +57,8 @@ class _HipExercisePageState extends State<HipExercisePage> {
           .doc(user.uid)
           .collection('exercise_history')
           .add({
-        // ✅ ชื่อตรง Firestore Rules
         'exerciseType': 'hip_adduction_standing',
-
-        // ✅ ต้องเป็น timestamp เท่านั้น
         'date': FieldValue.serverTimestamp(),
-
-        // field อื่นเก็บได้ตามปกติ
         'left': data['left'] ?? 0,
         'right': data['right'] ?? 0,
         'rounds': data['rounds'] ?? 0,
@@ -235,15 +242,22 @@ class _HipExercisePageState extends State<HipExercisePage> {
                         return 'No Data';
                       },
                     );
+                    
+                    // ✅ สะพานรับข้อความให้แอปพูด
+                    controller.addJavaScriptHandler(
+                      handlerName: 'speakText',
+                      callback: (args) {
+                        if (args.isNotEmpty) {
+                          flutterTts.speak(args[0].toString());
+                        }
+                      },
+                    );
                   },
                   onPermissionRequest: (controller, request) async {
                     return PermissionResponse(
                       resources: request.resources,
                       action: PermissionResponseAction.GRANT,
                     );
-                  },
-                  onConsoleMessage: (controller, message) {
-                    debugPrint('WEB [Hip] ▶ ${message.message}');
                   },
                 ),
               ),

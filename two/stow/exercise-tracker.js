@@ -410,7 +410,15 @@ let exerciseHistory = {
   // เหลือเฉพาะการบันทึกผลสำเร็จเท่านั้น
   
   // ปรับปรุงการบรรยายเสียง
-  function speakFeedback(text) {
+ function speakFeedback(text) {
+    // ==========================================================
+    // ⭐ โค้ดสะพานเชื่อม: ส่งข้อความไปให้แอป Flutter พูด
+    if (window.flutter_inappwebview != null) {
+      window.flutter_inappwebview.callHandler('speakText', text);
+      return; // ส่งเสร็จแล้วจบการทำงานตรงนี้เลย
+    }
+    // ==========================================================
+
     if (!window.speechSynthesis) {
       console.warn("เบราว์เซอร์นี้ไม่รองรับ Speech Synthesis API");
       return;

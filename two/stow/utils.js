@@ -110,25 +110,29 @@ function isFullBodyVisible(landmarks, requiredKeypoints) {
 }
 
 // Text-to-speech function
+// Text-to-speech function
 function speakFeedback(text) {
-  // รับค่า voiceFeedbackEnabled และ voiceFeedbackCooldown จากพารามิเตอร์หรือตัวแปรทั่วไป
-  const voiceFeedbackEnabled = true; // สามารถกำหนดค่าจากภายนอกได้
+  const voiceFeedbackEnabled = true; 
   const voiceFeedbackCooldown = 2000; // ms
-
+  
   if (!voiceFeedbackEnabled) return;
-
-  // Check cooldown to avoid too many prompts
+  
   const now = Date.now();
   let lastVoiceFeedbackTime = window.lastVoiceFeedbackTime || 0;
-
   if (now - lastVoiceFeedbackTime < voiceFeedbackCooldown) return;
-
   window.lastVoiceFeedbackTime = now;
 
-  // Use browser's speech synthesis
+  // ==========================================================
+  // ⭐ โค้ดสะพานเชื่อม: ส่งไปให้แอป Flutter พูด
+  if (window.flutter_inappwebview != null) {
+    window.flutter_inappwebview.callHandler('speakText', text);
+    return;
+  }
+  // ==========================================================
+  
   if ('speechSynthesis' in window) {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'th-TH'; // Thai language
+    utterance.lang = 'th-TH'; 
     utterance.volume = 1.0;
     utterance.rate = 1.0;
     utterance.pitch = 1.0;

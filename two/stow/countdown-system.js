@@ -158,19 +158,22 @@ function startCountdown(seconds = 5, onComplete = null) {
    * @param {string} text ข้อความที่ต้องการให้พูด
    */
   function speakCountdown(text) {
+    // ==========================================================
+    // ⭐ โค้ดสะพานเชื่อม: ส่งไปให้แอป Flutter พูด
+    if (window.flutter_inappwebview != null) {
+      window.flutter_inappwebview.callHandler('speakText', text);
+      return;
+    }
+    // ==========================================================
+
     // ตรวจสอบว่ามีการเปิดใช้งานเสียงหรือไม่
     if (window.speechSynthesis && (window.voiceFeedbackEnabled === undefined || window.voiceFeedbackEnabled)) {
-      // ยกเลิกเสียงที่กำลังพูดอยู่ (ถ้ามี)
       window.speechSynthesis.cancel();
-      
-      // สร้างข้อความใหม่
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'th-TH';
       utterance.volume = 1.0;
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
-      
-      // พูดข้อความ
       window.speechSynthesis.speak(utterance);
     }
   }

@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_tts/flutter_tts.dart'; // ✅ นำเข้าระบบเสียง
 import '../widgets/ui_components.dart';
 
 class DumbbellExercisePage extends StatefulWidget {
@@ -13,10 +15,20 @@ class DumbbellExercisePage extends StatefulWidget {
 
 class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
   late InAppLocalhostServer _server;
+  final FlutterTts flutterTts = FlutterTts(); // ✅ สร้างตัวแปรลำโพง
+
+  Future<void> _requestCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (status.isDenied) {
+      await Permission.camera.request();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _requestCameraPermission();
+    flutterTts.setLanguage("th-TH"); // ✅ ตั้งค่าให้พูดภาษาไทย
     _server = InAppLocalhostServer(documentRoot: 'assets/site', port: 8080);
     _server.start();
   }
@@ -24,6 +36,7 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
   @override
   void dispose() {
     _server.close();
+    flutterTts.stop(); // ✅ ปิดเสียงตอนออกหน้า
     super.dispose();
   }
 
@@ -42,13 +55,8 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
           .doc(user.uid)
           .collection('exercise_history')
           .add({
-        // ✅ ชื่อตรงตาม Firestore Rules
         'exerciseType': 'dumbbell_standing',
-
-        // ✅ บังคับให้เป็น timestamp
         'date': FieldValue.serverTimestamp(),
-
-        // field อื่น ๆ เก็บได้ตามปกติ
         'left': data['left'],
         'right': data['right'],
         'rounds': data['rounds'],
@@ -139,12 +147,21 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
                       handlerName: 'saveExerciseData',
                       callback: (args) {
                         if (args.isNotEmpty) {
-                          final data =
-                              Map<String, dynamic>.from(args[0]);
+                          final data = Map<String, dynamic>.from(args[0]);
                           _saveToFirebase(data);
                           return 'Saved';
                         }
                         return 'No Data';
+                      },
+                    );
+                    
+                    // ✅ สะพานรับข้อความให้แอปพูด
+                    controller.addJavaScriptHandler(
+                      handlerName: 'speakText',
+                      callback: (args) {
+                        if (args.isNotEmpty) {
+                          flutterTts.speak(args[0].toString());
+                        }
                       },
                     );
                   },
@@ -153,9 +170,6 @@ class _DumbbellExercisePageState extends State<DumbbellExercisePage> {
                       resources: request.resources,
                       action: PermissionResponseAction.GRANT,
                     );
-                  },
-                  onConsoleMessage: (controller, message) {
-                    debugPrint('WEB ▶ ${message.message}');
                   },
                 ),
               ),
